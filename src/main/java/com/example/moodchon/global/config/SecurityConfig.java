@@ -3,6 +3,7 @@ package com.example.moodchon.global.config;
 import com.example.moodchon.auth.CookieAuthorizationRequestRepository;
 import com.example.moodchon.auth.CustomOAuth2UserService;
 import com.example.moodchon.auth.handler.CustomAuthenticationEntryPoint;
+import com.example.moodchon.auth.handler.OAuth2SuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -24,13 +25,16 @@ public class SecurityConfig {
     private final CookieAuthorizationRequestRepository cookieAuthorizationRequestRepository;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
     public SecurityConfig(CookieAuthorizationRequestRepository cookieAuthorizationRequestRepository,
                            CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
-                           CustomOAuth2UserService customOAuth2UserService) {
+                           CustomOAuth2UserService customOAuth2UserService,
+                           OAuth2SuccessHandler oAuth2SuccessHandler) {
         this.cookieAuthorizationRequestRepository = cookieAuthorizationRequestRepository;
         this.customAuthenticationEntryPoint = customAuthenticationEntryPoint;
         this.customOAuth2UserService = customOAuth2UserService;
+        this.oAuth2SuccessHandler = oAuth2SuccessHandler;
     }
 
     @Bean
@@ -46,7 +50,8 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(endpoint -> endpoint
                                 .authorizationRequestRepository(cookieAuthorizationRequestRepository))
-                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService)))
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        .successHandler(oAuth2SuccessHandler))
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(customAuthenticationEntryPoint));
 
