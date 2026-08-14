@@ -1,6 +1,7 @@
 package com.example.moodchon.global.config;
 
 import com.example.moodchon.auth.CookieAuthorizationRequestRepository;
+import com.example.moodchon.auth.CustomOAuth2UserService;
 import com.example.moodchon.auth.handler.CustomAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,11 +23,14 @@ public class SecurityConfig {
 
     private final CookieAuthorizationRequestRepository cookieAuthorizationRequestRepository;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final CustomOAuth2UserService customOAuth2UserService;
 
     public SecurityConfig(CookieAuthorizationRequestRepository cookieAuthorizationRequestRepository,
-                           CustomAuthenticationEntryPoint customAuthenticationEntryPoint) {
+                           CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
+                           CustomOAuth2UserService customOAuth2UserService) {
         this.cookieAuthorizationRequestRepository = cookieAuthorizationRequestRepository;
         this.customAuthenticationEntryPoint = customAuthenticationEntryPoint;
+        this.customOAuth2UserService = customOAuth2UserService;
     }
 
     @Bean
@@ -41,7 +45,8 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(endpoint -> endpoint
-                                .authorizationRequestRepository(cookieAuthorizationRequestRepository)))
+                                .authorizationRequestRepository(cookieAuthorizationRequestRepository))
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService)))
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(customAuthenticationEntryPoint));
 
