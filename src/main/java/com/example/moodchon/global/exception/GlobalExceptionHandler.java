@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -23,6 +24,13 @@ public class GlobalExceptionHandler {
         log.warn("Validation error: {}", e.getMessage());
         return ResponseEntity.status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
                 .body(ApiResponse.fail(ErrorCode.INVALID_INPUT_VALUE));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoResourceFoundException(NoResourceFoundException e) {
+        log.warn("No resource found: {}", e.getMessage());
+        return ResponseEntity.status(ErrorCode.ENTITY_NOT_FOUND.getStatus())
+                .body(ApiResponse.fail(ErrorCode.ENTITY_NOT_FOUND));
     }
 
     @ExceptionHandler(Exception.class)
