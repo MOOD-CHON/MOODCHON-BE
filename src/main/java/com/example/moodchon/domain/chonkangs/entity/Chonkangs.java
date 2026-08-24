@@ -33,6 +33,8 @@ import org.hibernate.annotations.SQLRestriction;
 @SQLRestriction("deleted_at IS NULL")
 public class Chonkangs extends BaseEntity {
 
+    public static final int MAX_MEMBER_COUNT = 6;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -104,6 +106,19 @@ public class Chonkangs extends BaseEntity {
     public void confirmMood(String moodName, String moodDescription) {
         this.moodName = moodName;
         this.moodDescription = moodDescription;
+    }
+
+    public void updateTripInfo(String name, LocalDate startDate, LocalDate endDate, int plannedMemberCount,
+                                CompanionType companionType, TravelMethod travelMethod, Region desiredRegion,
+                                Set<AccommodationCondition> accommodationConditions) {
+        this.name = name;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.plannedMemberCount = plannedMemberCount;
+        this.companionType = companionType;
+        this.travelMethod = travelMethod;
+        this.desiredRegion = desiredRegion;
+        this.accommodationConditions = accommodationConditions != null ? accommodationConditions : new HashSet<>();
     }
 
     public ChonkangsStatus resolveStatus(LocalDate today) {
