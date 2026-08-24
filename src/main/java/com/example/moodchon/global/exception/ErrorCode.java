@@ -16,6 +16,9 @@ public enum ErrorCode {
     AI_GENERATION_FAILED(HttpStatus.BAD_GATEWAY, "C006", "추천 일정 생성에 실패했습니다. 잠시 후 다시 시도해주세요."),
     INVALID_DATE_RANGE(HttpStatus.BAD_REQUEST, "C007", "여행 날짜는 오늘 이후, 최대 6박 7일까지만 선택할 수 있습니다."),
     INVALID_MOOD_SELECTION(HttpStatus.BAD_REQUEST, "C008", "무드 이미지를 정확히 3개 선택해야 합니다."),
+    INVALID_INVITE_CODE(HttpStatus.NOT_FOUND, "C009", "유효하지 않은 초대 코드예요. 다시 확인해주세요."),
+    CHONKANG_FULL(HttpStatus.CONFLICT, "C010", "해당 촌캉스는 참여 인원이 모두 찼어요. 촌캉스는 최대 6명까지 참여할 수 있어요."),
+    ALREADY_JOINED(HttpStatus.CONFLICT, "C011", "이미 참여한 촌캉스입니다."),
 
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "A001", "인증이 필요합니다."),
     FORBIDDEN(HttpStatus.FORBIDDEN, "A002", "접근 권한이 없습니다.");
