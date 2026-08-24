@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -31,19 +32,22 @@ public class SecurityConfig {
     private final CustomOidcUserService customOidcUserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final OAuth2AuthorizationRequestResolver authorizationRequestResolver;
 
     public SecurityConfig(CookieAuthorizationRequestRepository cookieAuthorizationRequestRepository,
                            CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
                            CustomOAuth2UserService customOAuth2UserService,
                            CustomOidcUserService customOidcUserService,
                            OAuth2SuccessHandler oAuth2SuccessHandler,
-                           JwtAuthenticationFilter jwtAuthenticationFilter) {
+                           JwtAuthenticationFilter jwtAuthenticationFilter,
+                           OAuth2AuthorizationRequestResolver authorizationRequestResolver) {
         this.cookieAuthorizationRequestRepository = cookieAuthorizationRequestRepository;
         this.customAuthenticationEntryPoint = customAuthenticationEntryPoint;
         this.customOAuth2UserService = customOAuth2UserService;
         this.customOidcUserService = customOidcUserService;
         this.oAuth2SuccessHandler = oAuth2SuccessHandler;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.authorizationRequestResolver = authorizationRequestResolver;
     }
 
     @Bean
@@ -58,7 +62,8 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(endpoint -> endpoint
-                                .authorizationRequestRepository(cookieAuthorizationRequestRepository))
+                                .authorizationRequestRepository(cookieAuthorizationRequestRepository)
+                                .authorizationRequestResolver(authorizationRequestResolver))
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService)
                                 .oidcUserService(customOidcUserService))

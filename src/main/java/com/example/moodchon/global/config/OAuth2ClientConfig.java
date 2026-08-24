@@ -1,5 +1,6 @@
 package com.example.moodchon.global.config;
 
+import com.example.moodchon.auth.apple.AppleAuthorizationRequestResolver;
 import com.example.moodchon.auth.apple.AppleClientRegistrationRepository;
 import com.example.moodchon.auth.apple.AppleClientSecretGenerator;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 
 @Configuration
 public class OAuth2ClientConfig {
@@ -24,5 +26,11 @@ public class OAuth2ClientConfig {
 
         return new AppleClientRegistrationRepository(
                 new InMemoryClientRegistrationRepository(registrations), appleClientSecretGenerator);
+    }
+
+    @Bean
+    public OAuth2AuthorizationRequestResolver authorizationRequestResolver(
+            ClientRegistrationRepository clientRegistrationRepository) {
+        return new AppleAuthorizationRequestResolver(clientRegistrationRepository);
     }
 }
