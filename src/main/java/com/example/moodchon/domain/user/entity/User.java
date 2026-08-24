@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,7 +18,9 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"provider", "provider_id"})
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE users SET deleted_at = NOW() WHERE id = ?")
@@ -28,8 +31,12 @@ public class User extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private Long kakaoId;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AuthProvider provider;
+
+    @Column(name = "provider_id", nullable = false)
+    private String providerId;
 
     @Column(nullable = false)
     private String nickname;
@@ -41,8 +48,9 @@ public class User extends BaseEntity {
     private UserRole role;
 
     @Builder
-    private User(Long kakaoId, String nickname, String profileImageUrl, UserRole role) {
-        this.kakaoId = kakaoId;
+    private User(AuthProvider provider, String providerId, String nickname, String profileImageUrl, UserRole role) {
+        this.provider = provider;
+        this.providerId = providerId;
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
         this.role = role;
