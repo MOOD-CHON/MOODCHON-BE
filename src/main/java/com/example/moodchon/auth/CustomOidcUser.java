@@ -6,18 +6,20 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
-public class CustomOAuth2User implements OAuth2User, UserPrincipal {
+public class CustomOidcUser implements OidcUser, UserPrincipal {
 
     private final Long userId;
     private final String role;
-    private final Map<String, Object> attributes;
+    private final OidcUser oidcUser;
 
-    public CustomOAuth2User(User user, Map<String, Object> attributes) {
+    public CustomOidcUser(User user, OidcUser oidcUser) {
         this.userId = user.getId();
         this.role = user.getRole().name();
-        this.attributes = attributes;
+        this.oidcUser = oidcUser;
     }
 
     @Override
@@ -31,8 +33,23 @@ public class CustomOAuth2User implements OAuth2User, UserPrincipal {
     }
 
     @Override
+    public Map<String, Object> getClaims() {
+        return oidcUser.getClaims();
+    }
+
+    @Override
+    public OidcUserInfo getUserInfo() {
+        return oidcUser.getUserInfo();
+    }
+
+    @Override
+    public OidcIdToken getIdToken() {
+        return oidcUser.getIdToken();
+    }
+
+    @Override
     public Map<String, Object> getAttributes() {
-        return attributes;
+        return oidcUser.getAttributes();
     }
 
     @Override

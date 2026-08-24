@@ -36,6 +36,17 @@ public class OAuthAttributes {
                 .build();
     }
 
+    public static OAuthAttributes ofApple(Map<String, Object> claims) {
+        String email = (String) claims.get("email");
+
+        return OAuthAttributes.builder()
+                .provider(AuthProvider.APPLE)
+                .providerId((String) claims.get("sub"))
+                .nickname(email != null ? email : "Apple User")
+                .profileImageUrl(null)
+                .build();
+    }
+
     public User toEntity() {
         return User.builder()
                 .provider(provider)
