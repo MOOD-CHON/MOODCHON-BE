@@ -12,11 +12,14 @@ import com.example.moodchon.domain.chonkangs.repository.ChonkangsMoodSelectionRe
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsRepository;
 import com.example.moodchon.domain.mood.entity.MoodCard;
 import com.example.moodchon.domain.mood.service.MoodCardResolver;
+import com.example.moodchon.domain.recommendation.entity.RecommendedItinerary;
+import com.example.moodchon.domain.recommendation.repository.RecommendedItineraryRepository;
 import com.example.moodchon.domain.user.entity.User;
 import com.example.moodchon.domain.user.repository.UserRepository;
 import com.example.moodchon.global.exception.CustomException;
 import com.example.moodchon.global.exception.ErrorCode;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +32,7 @@ public class ChonkangsJoinService {
     private final ChonkangsRepository chonkangsRepository;
     private final ChonkangsMemberRepository chonkangsMemberRepository;
     private final ChonkangsMoodSelectionRepository chonkangsMoodSelectionRepository;
+    private final RecommendedItineraryRepository recommendedItineraryRepository;
     private final UserRepository userRepository;
     private final TripDateValidator tripDateValidator;
     private final MoodCardResolver moodCardResolver;
@@ -68,28 +72,48 @@ public class ChonkangsJoinService {
             throw new CustomException(ErrorCode.CHONKANG_FULL);
         }
 
-        List<MoodCard> selectedMoodCards = moodCardResolver.resolveExactlyThree(request.selectedMoodCardIds());
-
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND));
+
+        boolean moodDecided = chonkang.isMoodDecided();
 
         chonkangsMemberRepository.save(ChonkangsMember.builder()
                 .chonkang(chonkang)
                 .user(user)
                 .build());
 
-        for (MoodCard moodCard : selectedMoodCards) {
-            chonkangsMoodSelectionRepository.save(ChonkangsMoodSelection.builder()
-                    .chonkang(chonkang)
-                    .moodCard(moodCard)
-                    .build());
+        long updatedMemberCount = currentMemberCount + 1;
+        boolean isLastParticipant = false;
+
+        if (moodDecided) {
+            // 4.1.3: 이미 무드가 결정된 방에 들어오는 참여자는 무드 검사를 다시 거치지 않는다.
+        } else {
+            Set<Long> selectedMoodCardIds = request.selectedMoodCardIds();
+            if (selectedMoodCardIds == null) {
+                throw new CustomException(ErrorCode.INVALID_MOOD_SELECTION);
+            }
+            List<MoodCard> selectedMoodCards = moodCardResolver.resolveExactlyThree(selectedMoodCardIds);
+            for (MoodCard moodCard : selectedMoodCards) {
+                chonkangsMoodSelectionRepository.save(ChonkangsMoodSelection.builder()
+                        .chonkang(chonkang)
+                        .user(user)
+                        .moodCard(moodCard)
+                        .build());
+            }
+            isLastParticipant = updatedMemberCount >= chonkang.getPlannedMemberCount();
         }
 
-        long updatedMemberCount = currentMemberCount + 1;
-        boolean isLastParticipant = updatedMemberCount >= chonkang.getPlannedMemberCount();
+        RecommendedItinerary itinerary = recommendedItineraryRepository.findByChonkangId(chonkang.getId())
+                .orElse(null);
 
-        return new JoinChonkangResponse(chonkang.getId(), isLastParticipant, chonkang.getPlannedMemberCount(),
-                updatedMemberCount);
+        return new JoinChonkangResponse(
+                chonkang.getId(),
+                moodDecided,
+                isLastParticipant,
+                chonkang.getPlannedMemberCount(),
+                updatedMemberCount,
+                itinerary != null,
+                itinerary != null && itinerary.isCommitted());
     }
 
     private Chonkangs findByInviteCode(String inviteCode) {

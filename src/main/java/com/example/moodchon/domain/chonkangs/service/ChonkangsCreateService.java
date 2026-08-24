@@ -60,6 +60,7 @@ public class ChonkangsCreateService {
         for (MoodCard moodCard : selectedMoodCards) {
             chonkangsMoodSelectionRepository.save(ChonkangsMoodSelection.builder()
                     .chonkang(chonkang)
+                    .user(host)
                     .moodCard(moodCard)
                     .build());
         }

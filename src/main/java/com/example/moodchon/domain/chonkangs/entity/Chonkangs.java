@@ -108,6 +108,19 @@ public class Chonkangs extends BaseEntity {
         this.moodDescription = moodDescription;
     }
 
+    public void resetMood() {
+        this.moodName = null;
+        this.moodDescription = null;
+    }
+
+    public boolean isMoodDecided() {
+        return moodName != null;
+    }
+
+    public void updateName(String name) {
+        this.name = name;
+    }
+
     public void updateTripInfo(String name, LocalDate startDate, LocalDate endDate, int plannedMemberCount,
                                 CompanionType companionType, TravelMethod travelMethod, Region desiredRegion,
                                 Set<AccommodationCondition> accommodationConditions) {
