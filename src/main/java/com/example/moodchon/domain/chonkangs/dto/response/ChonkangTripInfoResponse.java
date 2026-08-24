@@ -18,7 +18,8 @@ public record ChonkangTripInfoResponse(
         TravelMethod travelMethod,
         Region desiredRegion,
         Set<AccommodationCondition> accommodationConditions,
-        long currentMemberCount
+        long currentMemberCount,
+        boolean moodDecided
 ) {
 
     public static ChonkangTripInfoResponse of(Chonkangs chonkang, long currentMemberCount) {
@@ -32,7 +33,8 @@ public record ChonkangTripInfoResponse(
                 chonkang.getTravelMethod(),
                 chonkang.getDesiredRegion(),
                 chonkang.getAccommodationConditions(),
-                currentMemberCount
+                currentMemberCount,
+                chonkang.isMoodDecided()
         );
     }
 }

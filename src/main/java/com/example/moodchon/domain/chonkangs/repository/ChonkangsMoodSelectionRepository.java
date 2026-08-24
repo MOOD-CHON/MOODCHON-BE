@@ -7,4 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ChonkangsMoodSelectionRepository extends JpaRepository<ChonkangsMoodSelection, Long> {
 
     List<ChonkangsMoodSelection> findAllByChonkangId(Long chonkangId);
+
+    void deleteAllByChonkangId(Long chonkangId);
+
+    void deleteAllByChonkangIdAndUserId(Long chonkangId, Long userId);
 }

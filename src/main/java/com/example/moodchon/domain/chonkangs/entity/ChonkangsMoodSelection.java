@@ -1,6 +1,7 @@
 package com.example.moodchon.domain.chonkangs.entity;
 
 import com.example.moodchon.domain.mood.entity.MoodCard;
+import com.example.moodchon.domain.user.entity.User;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -17,7 +18,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "chonkang_mood_selections",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"chonkang_id", "mood_card_id"}))
+        uniqueConstraints = @UniqueConstraint(columnNames = {"chonkang_id", "user_id", "mood_card_id"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChonkangsMoodSelection {
@@ -31,12 +32,17 @@ public class ChonkangsMoodSelection {
     private Chonkangs chonkang;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mood_card_id", nullable = false)
     private MoodCard moodCard;
 
     @Builder
-    private ChonkangsMoodSelection(Chonkangs chonkang, MoodCard moodCard) {
+    private ChonkangsMoodSelection(Chonkangs chonkang, User user, MoodCard moodCard) {
         this.chonkang = chonkang;
+        this.user = user;
         this.moodCard = moodCard;
     }
 }
