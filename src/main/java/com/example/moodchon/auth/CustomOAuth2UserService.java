@@ -21,14 +21,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
-        OAuthAttributes attributes = OAuthAttributes.of(oAuth2User.getAttributes());
+        OAuthAttributes attributes = OAuthAttributes.ofKakao(oAuth2User.getAttributes());
         User user = saveOrUpdate(attributes);
 
         return new CustomOAuth2User(user, oAuth2User.getAttributes());
     }
 
     private User saveOrUpdate(OAuthAttributes attributes) {
-        return userRepository.findByKakaoId(attributes.getKakaoId())
+        return userRepository.findByProviderAndProviderId(attributes.getProvider(), attributes.getProviderId())
                 .map(user -> {
                     user.updateProfile(attributes.getNickname(), attributes.getProfileImageUrl());
                     return user;

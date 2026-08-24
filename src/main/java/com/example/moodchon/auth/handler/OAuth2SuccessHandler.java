@@ -1,6 +1,6 @@
 package com.example.moodchon.auth.handler;
 
-import com.example.moodchon.auth.CustomOAuth2User;
+import com.example.moodchon.auth.UserPrincipal;
 import com.example.moodchon.auth.dto.TokenResponse;
 import com.example.moodchon.auth.jwt.JwtProvider;
 import com.example.moodchon.global.common.ApiResponse;
@@ -26,10 +26,10 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                          Authentication authentication) throws IOException {
-        CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
-        String accessToken = jwtProvider.createAccessToken(oAuth2User.getUserId(), oAuth2User.getRole());
-        String refreshToken = jwtProvider.createRefreshToken(oAuth2User.getUserId());
+        String accessToken = jwtProvider.createAccessToken(userPrincipal.getUserId(), userPrincipal.getRole());
+        String refreshToken = jwtProvider.createRefreshToken(userPrincipal.getUserId());
 
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
