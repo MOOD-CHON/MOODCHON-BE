@@ -1,0 +1,49 @@
+package com.example.moodchon.domain.chonkangs.service;
+
+import com.example.moodchon.domain.chonkangs.dto.request.SubmitMoodSelectionRequest;
+import com.example.moodchon.domain.chonkangs.entity.Chonkangs;
+import com.example.moodchon.domain.chonkangs.entity.ChonkangsMoodSelection;
+import com.example.moodchon.domain.chonkangs.repository.ChonkangsMoodSelectionRepository;
+import com.example.moodchon.domain.chonkangs.repository.ChonkangsRepository;
+import com.example.moodchon.domain.mood.entity.MoodCard;
+import com.example.moodchon.domain.mood.service.MoodCardResolver;
+import com.example.moodchon.domain.user.entity.User;
+import com.example.moodchon.domain.user.repository.UserRepository;
+import com.example.moodchon.global.exception.CustomException;
+import com.example.moodchon.global.exception.ErrorCode;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class ChonkangsMoodSelectionCommandService {
+
+    private final ChonkangsAccessValidator chonkangsAccessValidator;
+    private final ChonkangsRepository chonkangsRepository;
+    private final ChonkangsMoodSelectionRepository chonkangsMoodSelectionRepository;
+    private final UserRepository userRepository;
+    private final MoodCardResolver moodCardResolver;
+
+    public void submit(Long chonkangId, Long userId, SubmitMoodSelectionRequest request) {
+        chonkangsAccessValidator.validateMember(chonkangId, userId);
+
+        Chonkangs chonkang = chonkangsRepository.findById(chonkangId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND));
+
+        List<MoodCard> moodCards = moodCardResolver.resolveExactlyThree(request.selectedMoodCardIds());
+
+        chonkangsMoodSelectionRepository.deleteAllByChonkangIdAndUserId(chonkangId, userId);
+        for (MoodCard moodCard : moodCards) {
+            chonkangsMoodSelectionRepository.save(ChonkangsMoodSelection.builder()
+                    .chonkang(chonkang)
+                    .user(user)
+                    .moodCard(moodCard)
+                    .build());
+        }
+    }
+}
