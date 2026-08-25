@@ -26,6 +26,7 @@ public class ChonkangsMoodSelectionCommandService {
     private final ChonkangsMoodSelectionRepository chonkangsMoodSelectionRepository;
     private final UserRepository userRepository;
     private final MoodCardResolver moodCardResolver;
+    private final ChonkangsMoodResultService chonkangsMoodResultService;
 
     public void submit(Long chonkangId, Long userId, SubmitMoodSelectionRequest request) {
         chonkangsAccessValidator.validateMember(chonkangId, userId);
@@ -45,5 +46,7 @@ public class ChonkangsMoodSelectionCommandService {
                     .moodCard(moodCard)
                     .build());
         }
+
+        chonkangsMoodResultService.confirmIfAllMembersSubmitted(chonkang);
     }
 }
