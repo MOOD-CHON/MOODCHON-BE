@@ -147,6 +147,9 @@ public class Chonkangs extends BaseEntity {
     }
 
     public ChonkangsMainStatus resolveMainStatus() {
+        if (isAccommodationConfirmed()) {
+            return ChonkangsMainStatus.ACCOMMODATION_CONFIRMED;
+        }
         return isMoodDecided() ? ChonkangsMainStatus.MOOD_DECIDED : ChonkangsMainStatus.MOOD_VOTING;
     }
 

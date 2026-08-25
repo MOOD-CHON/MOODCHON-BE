@@ -5,6 +5,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.moodchon.domain.accommodation.repository.RecommendedAccommodationRepository;
 import com.example.moodchon.domain.chonkangs.dto.response.ChonkangMainResponse;
 import com.example.moodchon.domain.chonkangs.dto.response.MemberMoodProgressResponse;
 import com.example.moodchon.domain.chonkangs.entity.Chonkangs;
@@ -49,6 +50,9 @@ class ChonkangsMainQueryServiceTest {
     @Mock
     private ChonkangsMoodSelectionRepository chonkangsMoodSelectionRepository;
 
+    @Mock
+    private RecommendedAccommodationRepository recommendedAccommodationRepository;
+
     @InjectMocks
     private ChonkangsMainQueryService chonkangsMainQueryService;
 
@@ -91,6 +95,7 @@ class ChonkangsMainQueryServiceTest {
         chonkang.confirmMood("고요함", "우리 팀이 가장 많이 선택한 무드는 '고요함'예요.");
 
         when(chonkangsRepository.findById(chonkangId)).thenReturn(Optional.of(chonkang));
+        when(recommendedAccommodationRepository.findAllByChonkangIdOrderByRankAsc(chonkangId)).thenReturn(List.of());
 
         ChonkangMainResponse response = chonkangsMainQueryService.getMain(chonkangId, 1L);
 
@@ -98,6 +103,7 @@ class ChonkangsMainQueryServiceTest {
         assertThat(response.moodProgress()).isNull();
         assertThat(response.moodResult().name()).isEqualTo("고요함");
         assertThat(response.moodResult().description()).contains("고요함");
+        assertThat(response.recommendedAccommodations()).isEmpty();
         verify(chonkangsMemberRepository, never()).findAllWithUserByChonkangId(chonkangId);
         verify(chonkangsMoodSelectionRepository, never()).findAllByChonkangId(chonkangId);
     }

@@ -1,6 +1,9 @@
 package com.example.moodchon.domain.chonkangs.service;
 
+import com.example.moodchon.domain.accommodation.dto.response.RecommendedAccommodationResponse;
+import com.example.moodchon.domain.accommodation.repository.RecommendedAccommodationRepository;
 import com.example.moodchon.domain.chonkangs.dto.response.ChonkangMainResponse;
+import com.example.moodchon.domain.chonkangs.dto.response.ConfirmedAccommodationResponse;
 import com.example.moodchon.domain.chonkangs.dto.response.MemberMoodProgressResponse;
 import com.example.moodchon.domain.chonkangs.dto.response.MoodProgressResponse;
 import com.example.moodchon.domain.chonkangs.dto.response.MoodResultResponse;
@@ -10,6 +13,10 @@ import com.example.moodchon.domain.chonkangs.entity.ChonkangsMember;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMemberRepository;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMoodSelectionRepository;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsRepository;
+import com.example.moodchon.domain.recommendation.dto.response.RecommendedItineraryResponse;
+import com.example.moodchon.domain.recommendation.entity.RecommendedItinerary;
+import com.example.moodchon.domain.recommendation.repository.RecommendedItineraryItemRepository;
+import com.example.moodchon.domain.recommendation.repository.RecommendedItineraryRepository;
 import com.example.moodchon.global.exception.CustomException;
 import com.example.moodchon.global.exception.ErrorCode;
 import java.util.List;
@@ -24,10 +31,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class ChonkangsMainQueryService {
 
+    private static final int RECOMMENDED_ACCOMMODATION_PREVIEW_COUNT = 5;
+
     private final ChonkangsAccessValidator chonkangsAccessValidator;
     private final ChonkangsRepository chonkangsRepository;
     private final ChonkangsMemberRepository chonkangsMemberRepository;
     private final ChonkangsMoodSelectionRepository chonkangsMoodSelectionRepository;
+    private final RecommendedAccommodationRepository recommendedAccommodationRepository;
+    private final RecommendedItineraryRepository recommendedItineraryRepository;
+    private final RecommendedItineraryItemRepository recommendedItineraryItemRepository;
 
     public ChonkangMainResponse getMain(Long chonkangId, Long userId) {
         chonkangsAccessValidator.validateMember(chonkangId, userId);
@@ -35,8 +47,12 @@ public class ChonkangsMainQueryService {
         Chonkangs chonkang = chonkangsRepository.findById(chonkangId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND));
 
-        if (chonkang.resolveMainStatus() == ChonkangsMainStatus.MOOD_DECIDED) {
-            return ChonkangMainResponse.moodDecided(MoodResultResponse.of(chonkang));
+        ChonkangsMainStatus status = chonkang.resolveMainStatus();
+        if (status == ChonkangsMainStatus.ACCOMMODATION_CONFIRMED) {
+            return buildAccommodationConfirmed(chonkang);
+        }
+        if (status == ChonkangsMainStatus.MOOD_DECIDED) {
+            return ChonkangMainResponse.moodDecided(MoodResultResponse.of(chonkang), buildRecommendedAccommodations(chonkangId));
         }
 
         return ChonkangMainResponse.moodVoting(buildMoodProgress(chonkangId));
@@ -53,5 +69,29 @@ public class ChonkangsMainQueryService {
                 .toList();
 
         return MoodProgressResponse.of(memberProgress);
+    }
+
+    private List<RecommendedAccommodationResponse> buildRecommendedAccommodations(Long chonkangId) {
+        return recommendedAccommodationRepository.findAllByChonkangIdOrderByRankAsc(chonkangId).stream()
+                .limit(RECOMMENDED_ACCOMMODATION_PREVIEW_COUNT)
+                .map(RecommendedAccommodationResponse::of)
+                .toList();
+    }
+
+    private ChonkangMainResponse buildAccommodationConfirmed(Chonkangs chonkang) {
+        ConfirmedAccommodationResponse confirmedAccommodation =
+                ConfirmedAccommodationResponse.of(chonkang.getConfirmedAccommodation());
+
+        RecommendedItineraryResponse itinerary = recommendedItineraryRepository.findByChonkangId(chonkang.getId())
+                .filter(RecommendedItinerary::isCommitted)
+                .map(this::toItineraryResponse)
+                .orElse(null);
+
+        return ChonkangMainResponse.accommodationConfirmed(MoodResultResponse.of(chonkang), confirmedAccommodation, itinerary);
+    }
+
+    private RecommendedItineraryResponse toItineraryResponse(RecommendedItinerary itinerary) {
+        return RecommendedItineraryResponse.of(itinerary, recommendedItineraryItemRepository
+                .findAllByRecommendedItineraryIdOrderByDayNumberAscOrderInDayAsc(itinerary.getId()));
     }
 }
