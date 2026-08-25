@@ -1,5 +1,6 @@
 package com.example.moodchon.domain.chonkangs.entity;
 
+import com.example.moodchon.domain.place.entity.Place;
 import com.example.moodchon.domain.user.entity.User;
 import com.example.moodchon.global.entity.BaseEntity;
 import jakarta.persistence.CollectionTable;
@@ -16,6 +17,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.AccessLevel;
@@ -83,6 +85,12 @@ public class Chonkangs extends BaseEntity {
     @JoinColumn(name = "host_id", nullable = false)
     private User host;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "confirmed_accommodation_place_id")
+    private Place confirmedAccommodation;
+
+    private LocalDateTime accommodationConfirmedAt;
+
     @Builder
     private Chonkangs(String name, LocalDate startDate, LocalDate endDate, int plannedMemberCount,
                       CompanionType companionType, TravelMethod travelMethod, Region desiredRegion,
@@ -140,5 +148,19 @@ public class Chonkangs extends BaseEntity {
 
     public ChonkangsMainStatus resolveMainStatus() {
         return isMoodDecided() ? ChonkangsMainStatus.MOOD_DECIDED : ChonkangsMainStatus.MOOD_VOTING;
+    }
+
+    public void confirmAccommodation(Place place) {
+        this.confirmedAccommodation = place;
+        this.accommodationConfirmedAt = LocalDateTime.now();
+    }
+
+    public void cancelAccommodation() {
+        this.confirmedAccommodation = null;
+        this.accommodationConfirmedAt = null;
+    }
+
+    public boolean isAccommodationConfirmed() {
+        return confirmedAccommodation != null;
     }
 }
