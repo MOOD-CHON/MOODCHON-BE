@@ -13,8 +13,7 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-// 한국관광공사 TourAPI 4.0 areaBasedList2 (숙박: contentTypeId=32).
-// 실제 서비스키/네트워크 환경에서 응답 스펙 재확인 필요.
+// 한국관광공사 TourAPI 4.0 areaBasedList2 (숙박: contentTypeId=32). 실제 서비스키로 호출 검증 완료.
 @Component
 public class TourApiClient {
 
@@ -42,7 +41,6 @@ public class TourApiClient {
                             .queryParam("MobileApp", "moodchon")
                             .queryParam("_type", "json")
                             .queryParam("arrange", "A")
-                            .queryParam("listYN", "Y")
                             .queryParam("contentTypeId", ACCOMMODATION_CONTENT_TYPE_ID)
                             .queryParam("areaCode", TourApiRegionCode.resolve(region))
                             .queryParam("numOfRows", numOfRows)
