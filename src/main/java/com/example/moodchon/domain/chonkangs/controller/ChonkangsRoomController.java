@@ -3,10 +3,12 @@ package com.example.moodchon.domain.chonkangs.controller;
 import com.example.moodchon.domain.chonkangs.dto.request.SubmitMoodSelectionRequest;
 import com.example.moodchon.domain.chonkangs.dto.request.UpdateChonkangInfoRequest;
 import com.example.moodchon.domain.chonkangs.dto.response.ChonkangInviteCodeResponse;
+import com.example.moodchon.domain.chonkangs.dto.response.ChonkangMainResponse;
 import com.example.moodchon.domain.chonkangs.dto.response.ChonkangMemberResponse;
 import com.example.moodchon.domain.chonkangs.dto.response.LeaveChonkangResponse;
 import com.example.moodchon.domain.chonkangs.dto.response.UpdateChonkangInfoResponse;
 import com.example.moodchon.domain.chonkangs.service.ChonkangsInfoUpdateService;
+import com.example.moodchon.domain.chonkangs.service.ChonkangsMainQueryService;
 import com.example.moodchon.domain.chonkangs.service.ChonkangsMembershipService;
 import com.example.moodchon.domain.chonkangs.service.ChonkangsMoodSelectionCommandService;
 import com.example.moodchon.global.common.ApiResponse;
@@ -30,6 +32,14 @@ public class ChonkangsRoomController {
     private final ChonkangsInfoUpdateService chonkangsInfoUpdateService;
     private final ChonkangsMoodSelectionCommandService chonkangsMoodSelectionCommandService;
     private final ChonkangsMembershipService chonkangsMembershipService;
+    private final ChonkangsMainQueryService chonkangsMainQueryService;
+
+    @GetMapping("/main")
+    public ApiResponse<ChonkangMainResponse> getMain(
+            @PathVariable Long chonkangId,
+            @AuthenticationPrincipal Long userId) {
+        return ApiResponse.success(chonkangsMainQueryService.getMain(chonkangId, userId));
+    }
 
     @PatchMapping("/info")
     public ApiResponse<UpdateChonkangInfoResponse> updateInfo(
