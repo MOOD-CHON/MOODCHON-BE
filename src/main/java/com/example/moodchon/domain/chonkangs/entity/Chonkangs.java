@@ -137,4 +137,8 @@ public class Chonkangs extends BaseEntity {
     public ChonkangsStatus resolveStatus(LocalDate today) {
         return isCompleted(today) ? ChonkangsStatus.COMPLETED : ChonkangsStatus.ONGOING;
     }
+
+    public ChonkangsMainStatus resolveMainStatus() {
+        return isMoodDecided() ? ChonkangsMainStatus.MOOD_DECIDED : ChonkangsMainStatus.MOOD_VOTING;
+    }
 }
