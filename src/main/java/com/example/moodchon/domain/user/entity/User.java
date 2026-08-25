@@ -47,6 +47,9 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private UserRole role;
 
+    @Column(nullable = false)
+    private boolean notificationEnabled = true;
+
     @Builder
     private User(AuthProvider provider, String providerId, String nickname, String profileImageUrl, UserRole role) {
         this.provider = provider;
@@ -54,10 +57,23 @@ public class User extends BaseEntity {
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
         this.role = role;
+        this.notificationEnabled = true;
     }
 
     public void updateProfile(String nickname, String profileImageUrl) {
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updateProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
+
+    public void updateNotificationEnabled(boolean notificationEnabled) {
+        this.notificationEnabled = notificationEnabled;
     }
 }
