@@ -19,6 +19,7 @@ public enum ErrorCode {
     INVALID_INVITE_CODE(HttpStatus.NOT_FOUND, "C009", "유효하지 않은 초대 코드예요. 다시 확인해주세요."),
     CHONKANG_FULL(HttpStatus.CONFLICT, "C010", "해당 촌캉스는 참여 인원이 모두 찼어요. 촌캉스는 최대 6명까지 참여할 수 있어요."),
     ALREADY_JOINED(HttpStatus.CONFLICT, "C011", "이미 참여한 촌캉스입니다."),
+    TOUR_API_REQUEST_FAILED(HttpStatus.BAD_GATEWAY, "C012", "숙소 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요."),
 
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "A001", "인증이 필요합니다."),
     FORBIDDEN(HttpStatus.FORBIDDEN, "A002", "접근 권한이 없습니다.");
