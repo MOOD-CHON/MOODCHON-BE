@@ -10,6 +10,7 @@ import com.example.moodchon.domain.chonkangs.dto.response.UpdateChonkangInfoResp
 import com.example.moodchon.domain.chonkangs.service.ChonkangsInfoUpdateService;
 import com.example.moodchon.domain.chonkangs.service.ChonkangsMainQueryService;
 import com.example.moodchon.domain.chonkangs.service.ChonkangsMembershipService;
+import com.example.moodchon.domain.chonkangs.service.ChonkangsMoodReminderService;
 import com.example.moodchon.domain.chonkangs.service.ChonkangsMoodSelectionCommandService;
 import com.example.moodchon.global.common.ApiResponse;
 import jakarta.validation.Valid;
@@ -33,6 +34,7 @@ public class ChonkangsRoomController {
     private final ChonkangsMoodSelectionCommandService chonkangsMoodSelectionCommandService;
     private final ChonkangsMembershipService chonkangsMembershipService;
     private final ChonkangsMainQueryService chonkangsMainQueryService;
+    private final ChonkangsMoodReminderService chonkangsMoodReminderService;
 
     @GetMapping("/main")
     public ApiResponse<ChonkangMainResponse> getMain(
@@ -55,6 +57,14 @@ public class ChonkangsRoomController {
             @AuthenticationPrincipal Long userId,
             @Valid @RequestBody SubmitMoodSelectionRequest request) {
         chonkangsMoodSelectionCommandService.submit(chonkangId, userId, request);
+        return ApiResponse.success();
+    }
+
+    @PostMapping("/mood-selection/remind")
+    public ApiResponse<Void> remindMoodSelection(
+            @PathVariable Long chonkangId,
+            @AuthenticationPrincipal Long userId) {
+        chonkangsMoodReminderService.remind(chonkangId, userId);
         return ApiResponse.success();
     }
 
