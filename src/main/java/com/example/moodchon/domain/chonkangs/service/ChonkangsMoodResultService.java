@@ -5,9 +5,10 @@ import com.example.moodchon.domain.chonkangs.entity.ChonkangsMoodSelection;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMemberRepository;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMoodSelectionRepository;
 import com.example.moodchon.domain.mood.entity.MoodTag;
+import com.example.moodchon.domain.mood.entity.MoodType;
+import com.example.moodchon.domain.mood.repository.MoodTypeRepository;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class ChonkangsMoodResultService {
 
     private final ChonkangsMemberRepository chonkangsMemberRepository;
     private final ChonkangsMoodSelectionRepository chonkangsMoodSelectionRepository;
+    private final MoodTypeRepository moodTypeRepository;
 
     public void confirmIfAllMembersSubmitted(Chonkangs chonkang) {
         List<ChonkangsMoodSelection> selections = chonkangsMoodSelectionRepository.findAllByChonkangId(chonkang.getId());
@@ -34,32 +36,33 @@ public class ChonkangsMoodResultService {
             return;
         }
 
-        MoodTag topTag = resolveTopTag(selections);
-        // TODO: 이름/설명 카피는 임시 문구. 태그 조합 -> 무드명 매핑표가 기획에서 확정되면 교체
-        chonkang.confirmMood(topTag.getName(), buildDescription(topTag));
+        Map<Long, Long> tagCounts = countTagsByTagId(selections);
+        MoodType moodType = resolveBestMoodType(tagCounts);
+        chonkang.confirmMood(moodType.getName(), moodType.getDescription());
     }
 
-    private MoodTag resolveTopTag(List<ChonkangsMoodSelection> selections) {
-        Map<Long, MoodTag> tagsById = new LinkedHashMap<>();
+    private Map<Long, Long> countTagsByTagId(List<ChonkangsMoodSelection> selections) {
         Map<Long, Long> tagCounts = new HashMap<>();
-
         for (ChonkangsMoodSelection selection : selections) {
             for (MoodTag tag : selection.getMoodCard().getTags()) {
-                tagsById.putIfAbsent(tag.getId(), tag);
                 tagCounts.merge(tag.getId(), 1L, Long::sum);
             }
         }
-
-        Long topTagId = tagCounts.entrySet().stream()
-                .max(Comparator.<Map.Entry<Long, Long>>comparingLong(Map.Entry::getValue)
-                        .thenComparing(entry -> -entry.getKey()))
-                .map(Map.Entry::getKey)
-                .orElseThrow(() -> new IllegalStateException("무드 태그 집계 결과가 없습니다."));
-
-        return tagsById.get(topTagId);
+        return tagCounts;
     }
 
-    private String buildDescription(MoodTag topTag) {
-        return "우리 팀이 가장 많이 선택한 무드는 '" + topTag.getName() + "'예요.";
+    private MoodType resolveBestMoodType(Map<Long, Long> tagCounts) {
+        List<MoodType> moodTypes = moodTypeRepository.findAllWithCoreTags();
+
+        return moodTypes.stream()
+                .max(Comparator.<MoodType>comparingLong(moodType -> scoreOf(moodType, tagCounts))
+                        .thenComparing(moodType -> -moodType.getId()))
+                .orElseThrow(() -> new IllegalStateException("무드 유형 카탈로그가 비어 있습니다."));
+    }
+
+    private long scoreOf(MoodType moodType, Map<Long, Long> tagCounts) {
+        return moodType.getCoreTags().stream()
+                .mapToLong(tag -> tagCounts.getOrDefault(tag.getId(), 0L))
+                .sum();
     }
 }
