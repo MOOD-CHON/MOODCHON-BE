@@ -13,4 +13,6 @@ public interface SaveFolderPlaceRepository extends JpaRepository<SaveFolderPlace
     List<SaveFolderPlace> findAllBySaveFolderIdOrderByIdDesc(Long saveFolderId);
 
     void deleteAllBySaveFolderId(Long saveFolderId);
+
+    void deleteBySaveFolderIdAndPlaceId(Long saveFolderId, Long placeId);
 }

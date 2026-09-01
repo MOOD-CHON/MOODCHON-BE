@@ -41,4 +41,10 @@ public class SaveFolderCommandService {
         saveFolderPlaceRepository.deleteAllBySaveFolderId(folderId);
         saveFolderRepository.delete(folder);
     }
+
+    public void removePlace(Long folderId, Long userId, Long placeId) {
+        saveFolderAccessValidator.validateOwner(folderId, userId);
+
+        saveFolderPlaceRepository.deleteBySaveFolderIdAndPlaceId(folderId, placeId);
+    }
 }

@@ -54,4 +54,13 @@ public class SaveFolderController {
         saveFolderCommandService.delete(folderId, userId);
         return ApiResponse.success();
     }
+
+    @DeleteMapping("/{folderId}/places/{placeId}")
+    public ApiResponse<Void> removePlace(
+            @PathVariable Long folderId,
+            @PathVariable Long placeId,
+            @AuthenticationPrincipal Long userId) {
+        saveFolderCommandService.removePlace(folderId, userId, placeId);
+        return ApiResponse.success();
+    }
 }
