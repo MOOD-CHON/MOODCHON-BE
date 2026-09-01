@@ -2,6 +2,8 @@ package com.example.moodchon.domain.mood.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -11,7 +13,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-// "태그 체계 및 사용자 무드 유형" 문서의 무드 도출용 태그(22개) 카탈로그. 시드 데이터 별도 입력 필요.
+// "태그 체계 및 사용자 무드 유형" 문서의 무드 도출용 태그(22개) 카탈로그. 시드는 MoodTagSeeder가 앱 기동 시 채움.
 @Entity
 @Table(name = "mood_tags")
 @Getter
@@ -25,8 +27,13 @@ public class MoodTag {
     @Column(nullable = false, unique = true)
     private String name;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MoodTagCategory category;
+
     @Builder
-    private MoodTag(String name) {
+    private MoodTag(String name, MoodTagCategory category) {
         this.name = name;
+        this.category = category;
     }
 }

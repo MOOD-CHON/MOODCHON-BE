@@ -13,6 +13,9 @@ import com.example.moodchon.domain.chonkangs.repository.ChonkangsMoodSelectionRe
 import com.example.moodchon.domain.mood.entity.AccommodationType;
 import com.example.moodchon.domain.mood.entity.MoodCard;
 import com.example.moodchon.domain.mood.entity.MoodTag;
+import com.example.moodchon.domain.mood.entity.MoodTagCategory;
+import com.example.moodchon.domain.mood.entity.MoodType;
+import com.example.moodchon.domain.mood.repository.MoodTypeRepository;
 import com.example.moodchon.domain.user.entity.AuthProvider;
 import com.example.moodchon.domain.user.entity.User;
 import com.example.moodchon.domain.user.entity.UserRole;
@@ -36,6 +39,9 @@ class ChonkangsMoodResultServiceTest {
     @Mock
     private ChonkangsMoodSelectionRepository chonkangsMoodSelectionRepository;
 
+    @Mock
+    private MoodTypeRepository moodTypeRepository;
+
     @InjectMocks
     private ChonkangsMoodResultService chonkangsMoodResultService;
 
@@ -44,7 +50,7 @@ class ChonkangsMoodResultServiceTest {
     void doesNotConfirmMoodWhenSomeMembersHaveNotSubmitted() {
         Chonkangs chonkang = chonkang(1L);
         User submitted = user(1L);
-        MoodCard moodCard = moodCard(1L, moodTag(1L, "고요함"));
+        MoodCard moodCard = moodCard(1L, moodTag(1L, "고즈넉한"));
 
         when(chonkangsMoodSelectionRepository.findAllByChonkangId(1L))
                 .thenReturn(List.of(moodSelection(chonkang, submitted, moodCard)));
@@ -56,45 +62,53 @@ class ChonkangsMoodResultServiceTest {
     }
 
     @Test
-    @DisplayName("전원 제출을 완료하면 최다 득표 태그로 무드를 확정한다")
-    void confirmsMoodWithMostVotedTagWhenAllMembersSubmitted() {
+    @DisplayName("전원 제출을 완료하면 태그와 가장 많이 겹치는 무드 유형으로 확정한다")
+    void confirmsMoodWithBestMatchingMoodTypeWhenAllMembersSubmitted() {
         Chonkangs chonkang = chonkang(1L);
         User userA = user(1L);
         User userB = user(2L);
-        MoodTag popularTag = moodTag(1L, "고요함");
-        MoodTag minorTag = moodTag(2L, "왁자지껄");
-        MoodCard cardWithPopularTag = moodCard(1L, popularTag);
-        MoodCard cardWithBothTags = moodCard(2L, popularTag, minorTag);
+        MoodTag quiet = moodTag(1L, "조용한");
+        MoodTag alley = moodTag(2L, "골목길");
+        MoodTag lively = moodTag(3L, "활기있는");
+        MoodCard cardWithQuietAndAlley = moodCard(1L, quiet, alley);
+        MoodCard cardWithLively = moodCard(2L, lively);
+
+        MoodType quietAlleyType = moodType(1L, "고즈넉한 쉼표 무드", "설명1", quiet, alley);
+        MoodType livelyType = moodType(2L, "로컬 체험 무드", "설명2", lively);
 
         when(chonkangsMoodSelectionRepository.findAllByChonkangId(1L)).thenReturn(List.of(
-                moodSelection(chonkang, userA, cardWithPopularTag),
-                moodSelection(chonkang, userB, cardWithBothTags)
+                moodSelection(chonkang, userA, cardWithQuietAndAlley),
+                moodSelection(chonkang, userB, cardWithLively)
         ));
         when(chonkangsMemberRepository.countByChonkangId(1L)).thenReturn(2L);
+        when(moodTypeRepository.findAllWithCoreTags()).thenReturn(List.of(quietAlleyType, livelyType));
 
         chonkangsMoodResultService.confirmIfAllMembersSubmitted(chonkang);
 
         assertThat(chonkang.isMoodDecided()).isTrue();
-        assertThat(chonkang.getMoodName()).isEqualTo("고요함");
-        assertThat(chonkang.getMoodDescription()).contains("고요함");
+        assertThat(chonkang.getMoodName()).isEqualTo("고즈넉한 쉼표 무드");
+        assertThat(chonkang.getMoodDescription()).isEqualTo("설명1");
     }
 
     @Test
-    @DisplayName("득표수가 같으면 id가 더 낮은 태그를 우선한다")
-    void picksLowerIdTagOnTie() {
+    @DisplayName("점수가 같으면 id가 더 낮은 무드 유형을 우선한다")
+    void picksLowerIdMoodTypeOnTie() {
         Chonkangs chonkang = chonkang(1L);
         User user = user(1L);
-        MoodTag lowerIdTag = moodTag(1L, "고요함");
-        MoodTag higherIdTag = moodTag(2L, "왁자지껄");
-        MoodCard card = moodCard(1L, lowerIdTag, higherIdTag);
+        MoodTag quiet = moodTag(1L, "조용한");
+        MoodCard card = moodCard(1L, quiet);
+
+        MoodType lowerIdType = moodType(1L, "무드A", "설명A", quiet);
+        MoodType higherIdType = moodType(2L, "무드B", "설명B", quiet);
 
         when(chonkangsMoodSelectionRepository.findAllByChonkangId(1L))
                 .thenReturn(List.of(moodSelection(chonkang, user, card)));
         when(chonkangsMemberRepository.countByChonkangId(1L)).thenReturn(1L);
+        when(moodTypeRepository.findAllWithCoreTags()).thenReturn(List.of(higherIdType, lowerIdType));
 
         chonkangsMoodResultService.confirmIfAllMembersSubmitted(chonkang);
 
-        assertThat(chonkang.getMoodName()).isEqualTo("고요함");
+        assertThat(chonkang.getMoodName()).isEqualTo("무드A");
     }
 
     private Chonkangs chonkang(Long id) {
@@ -126,7 +140,7 @@ class ChonkangsMoodResultServiceTest {
     }
 
     private MoodTag moodTag(Long id, String name) {
-        MoodTag tag = MoodTag.builder().name(name).build();
+        MoodTag tag = MoodTag.builder().name(name).category(MoodTagCategory.ATMOSPHERE).build();
         ReflectionTestUtils.setField(tag, "id", id);
         return tag;
     }
@@ -145,6 +159,16 @@ class ChonkangsMoodResultServiceTest {
         AccommodationType type = AccommodationType.builder().name("펜션" + id).build();
         ReflectionTestUtils.setField(type, "id", id);
         return type;
+    }
+
+    private MoodType moodType(Long id, String name, String description, MoodTag... coreTags) {
+        MoodType moodType = MoodType.builder()
+                .name(name)
+                .description(description)
+                .coreTags(Set.of(coreTags))
+                .build();
+        ReflectionTestUtils.setField(moodType, "id", id);
+        return moodType;
     }
 
     private ChonkangsMoodSelection moodSelection(Chonkangs chonkang, User user, MoodCard moodCard) {

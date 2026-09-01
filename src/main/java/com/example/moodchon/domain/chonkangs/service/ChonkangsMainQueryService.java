@@ -1,6 +1,7 @@
 package com.example.moodchon.domain.chonkangs.service;
 
 import com.example.moodchon.domain.accommodation.dto.response.RecommendedAccommodationResponse;
+import com.example.moodchon.domain.accommodation.entity.RecommendedAccommodation;
 import com.example.moodchon.domain.accommodation.repository.RecommendedAccommodationRepository;
 import com.example.moodchon.domain.chonkangs.dto.response.ChonkangMainResponse;
 import com.example.moodchon.domain.chonkangs.dto.response.ConfirmedAccommodationResponse;
@@ -13,6 +14,8 @@ import com.example.moodchon.domain.chonkangs.entity.ChonkangsMember;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMemberRepository;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMoodSelectionRepository;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsRepository;
+import com.example.moodchon.domain.place.entity.Post;
+import com.example.moodchon.domain.place.repository.PostRepository;
 import com.example.moodchon.domain.recommendation.dto.response.RecommendedItineraryResponse;
 import com.example.moodchon.domain.recommendation.entity.RecommendedItinerary;
 import com.example.moodchon.domain.recommendation.repository.RecommendedItineraryItemRepository;
@@ -20,6 +23,7 @@ import com.example.moodchon.domain.recommendation.repository.RecommendedItinerar
 import com.example.moodchon.global.exception.CustomException;
 import com.example.moodchon.global.exception.ErrorCode;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +42,7 @@ public class ChonkangsMainQueryService {
     private final ChonkangsMemberRepository chonkangsMemberRepository;
     private final ChonkangsMoodSelectionRepository chonkangsMoodSelectionRepository;
     private final RecommendedAccommodationRepository recommendedAccommodationRepository;
+    private final PostRepository postRepository;
     private final RecommendedItineraryRepository recommendedItineraryRepository;
     private final RecommendedItineraryItemRepository recommendedItineraryItemRepository;
 
@@ -72,9 +77,23 @@ public class ChonkangsMainQueryService {
     }
 
     private List<RecommendedAccommodationResponse> buildRecommendedAccommodations(Long chonkangId) {
-        return recommendedAccommodationRepository.findAllByChonkangIdOrderByRankAsc(chonkangId).stream()
+        List<RecommendedAccommodation> recommendations = recommendedAccommodationRepository
+                .findAllByChonkangIdOrderByRankAsc(chonkangId).stream()
                 .limit(RECOMMENDED_ACCOMMODATION_PREVIEW_COUNT)
-                .map(RecommendedAccommodationResponse::of)
+                .toList();
+
+        List<Long> placeIds = recommendations.stream()
+                .map(recommendation -> recommendation.getPlace().getId())
+                .toList();
+        Map<Long, List<String>> imagesByPlaceId = postRepository.findAllByPlaceIdIn(placeIds).stream()
+                .collect(Collectors.groupingBy(
+                        post -> post.getPlace().getId(),
+                        Collectors.mapping(Post::getImageUrl, Collectors.toList())));
+
+        return recommendations.stream()
+                .map(recommendation -> RecommendedAccommodationResponse.of(
+                        recommendation,
+                        imagesByPlaceId.getOrDefault(recommendation.getPlace().getId(), List.of())))
                 .toList();
     }
 

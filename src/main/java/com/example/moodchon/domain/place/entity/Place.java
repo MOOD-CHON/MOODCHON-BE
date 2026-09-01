@@ -46,9 +46,12 @@ public class Place extends BaseEntity {
 
     private String thumbnailUrl;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     @Builder
     private Place(String externalContentId, String name, PlaceCategory category, String address,
-                  Double latitude, Double longitude, String thumbnailUrl) {
+                  Double latitude, Double longitude, String thumbnailUrl, String description) {
         this.externalContentId = externalContentId;
         this.name = name;
         this.category = category;
@@ -56,5 +59,10 @@ public class Place extends BaseEntity {
         this.latitude = latitude;
         this.longitude = longitude;
         this.thumbnailUrl = thumbnailUrl;
+        this.description = description;
+    }
+
+    public void updateDescription(String description) {
+        this.description = description;
     }
 }

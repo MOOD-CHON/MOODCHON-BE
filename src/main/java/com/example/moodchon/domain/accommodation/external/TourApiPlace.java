@@ -1,6 +1,6 @@
 package com.example.moodchon.domain.accommodation.external;
 
-public record TourApiAccommodation(
+public record TourApiPlace(
         String contentId,
         String name,
         String address,
