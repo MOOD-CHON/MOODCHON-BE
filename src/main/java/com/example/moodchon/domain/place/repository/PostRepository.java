@@ -10,6 +10,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     boolean existsByPlaceId(Long placeId);
 
+    List<Post> findAllByPlaceIdIn(List<Long> placeIds);
+
     List<Post> findAllByOrderByCreatedAtDesc();
 
     List<Post> findAllByTagsIdOrderByCreatedAtDesc(Long tagId);

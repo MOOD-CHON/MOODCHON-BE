@@ -20,6 +20,7 @@ import com.example.moodchon.domain.chonkangs.repository.ChonkangsMoodSelectionRe
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsRepository;
 import com.example.moodchon.domain.mood.entity.AccommodationType;
 import com.example.moodchon.domain.mood.entity.MoodCard;
+import com.example.moodchon.domain.place.repository.PostRepository;
 import com.example.moodchon.domain.user.entity.AuthProvider;
 import com.example.moodchon.domain.user.entity.User;
 import com.example.moodchon.domain.user.entity.UserRole;
@@ -52,6 +53,9 @@ class ChonkangsMainQueryServiceTest {
 
     @Mock
     private RecommendedAccommodationRepository recommendedAccommodationRepository;
+
+    @Mock
+    private PostRepository postRepository;
 
     @InjectMocks
     private ChonkangsMainQueryService chonkangsMainQueryService;
