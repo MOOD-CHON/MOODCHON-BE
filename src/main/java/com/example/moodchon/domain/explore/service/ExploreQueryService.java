@@ -36,6 +36,12 @@ public class ExploreQueryService {
                 .toList();
     }
 
+    public List<ExplorePostResponse> search(String keyword) {
+        return postRepository.searchByPlaceNameOrDescription(keyword).stream()
+                .map(post -> ExplorePostResponse.of(post, resolveRepresentativeTag(post, null)))
+                .toList();
+    }
+
     private MoodTag resolveRepresentativeTag(Post post, Long tagId) {
         if (tagId != null) {
             return post.getTags().stream()

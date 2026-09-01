@@ -28,4 +28,9 @@ public class ExploreController {
             @RequestParam(required = false) Long tagId) {
         return ApiResponse.success(exploreQueryService.getFeed(tagId));
     }
+
+    @GetMapping("/search")
+    public ApiResponse<List<ExplorePostResponse>> search(@RequestParam String keyword) {
+        return ApiResponse.success(exploreQueryService.search(keyword));
+    }
 }
