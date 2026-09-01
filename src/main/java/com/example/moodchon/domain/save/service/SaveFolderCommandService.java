@@ -3,6 +3,7 @@ package com.example.moodchon.domain.save.service;
 import com.example.moodchon.domain.save.dto.request.CreateSaveFolderRequest;
 import com.example.moodchon.domain.save.dto.response.SaveFolderResponse;
 import com.example.moodchon.domain.save.entity.SaveFolder;
+import com.example.moodchon.domain.save.repository.SaveFolderPlaceRepository;
 import com.example.moodchon.domain.save.repository.SaveFolderRepository;
 import com.example.moodchon.domain.user.entity.User;
 import com.example.moodchon.domain.user.repository.UserRepository;
@@ -17,7 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class SaveFolderCommandService {
 
+    private final SaveFolderAccessValidator saveFolderAccessValidator;
     private final SaveFolderRepository saveFolderRepository;
+    private final SaveFolderPlaceRepository saveFolderPlaceRepository;
     private final UserRepository userRepository;
 
     public SaveFolderResponse create(Long userId, CreateSaveFolderRequest request) {
@@ -30,5 +33,12 @@ public class SaveFolderCommandService {
                 .build());
 
         return SaveFolderResponse.of(folder);
+    }
+
+    public void delete(Long folderId, Long userId) {
+        SaveFolder folder = saveFolderAccessValidator.validateOwner(folderId, userId);
+
+        saveFolderPlaceRepository.deleteAllBySaveFolderId(folderId);
+        saveFolderRepository.delete(folder);
     }
 }

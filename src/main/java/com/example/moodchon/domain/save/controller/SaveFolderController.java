@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,5 +45,13 @@ public class SaveFolderController {
             @PathVariable Long folderId,
             @AuthenticationPrincipal Long userId) {
         return ApiResponse.success(saveFolderPlaceQueryService.getDetail(folderId, userId));
+    }
+
+    @DeleteMapping("/{folderId}")
+    public ApiResponse<Void> delete(
+            @PathVariable Long folderId,
+            @AuthenticationPrincipal Long userId) {
+        saveFolderCommandService.delete(folderId, userId);
+        return ApiResponse.success();
     }
 }
