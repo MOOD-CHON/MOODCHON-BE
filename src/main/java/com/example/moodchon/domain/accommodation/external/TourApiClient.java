@@ -6,6 +6,7 @@ import com.example.moodchon.global.exception.CustomException;
 import com.example.moodchon.global.exception.ErrorCode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -38,6 +39,10 @@ public class TourApiClient {
     public List<TourApiPlace> searchPlaces(Region region, PlaceCategory category, int numOfRows) {
         String rawResponseBody = requestAreaBasedList(region, TourApiCategoryCode.resolve(category), numOfRows);
         return parseItems(rawResponseBody, this::toPlace);
+    }
+
+    public Set<PlaceCategory> syncablePlaceCategories() {
+        return TourApiCategoryCode.syncableCategories();
     }
 
     public String fetchOverview(String contentId) {

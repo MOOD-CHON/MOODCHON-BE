@@ -61,4 +61,8 @@ public class Place extends BaseEntity {
         this.thumbnailUrl = thumbnailUrl;
         this.description = description;
     }
+
+    public void updateDescription(String description) {
+        this.description = description;
+    }
 }
