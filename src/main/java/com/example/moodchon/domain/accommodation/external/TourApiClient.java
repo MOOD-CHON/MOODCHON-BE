@@ -19,8 +19,6 @@ import tools.jackson.databind.json.JsonMapper;
 @Component
 public class TourApiClient {
 
-    private static final String ACCOMMODATION_CONTENT_TYPE_ID = "32";
-
     private final RestClient restClient;
     private final TourApiProperties properties;
     private final JsonMapper jsonMapper;
@@ -29,11 +27,6 @@ public class TourApiClient {
         this.properties = properties;
         this.jsonMapper = jsonMapper;
         this.restClient = RestClient.create();
-    }
-
-    public List<TourApiAccommodation> searchAccommodations(Region region, int numOfRows) {
-        String rawResponseBody = requestAreaBasedList(region, ACCOMMODATION_CONTENT_TYPE_ID, numOfRows);
-        return parseItems(rawResponseBody, this::toAccommodation);
     }
 
     public List<TourApiPlace> searchPlaces(Region region, PlaceCategory category, int numOfRows) {
@@ -147,17 +140,6 @@ public class TourApiClient {
 
     private JsonNode firstItem(JsonNode itemNode) {
         return itemNode.isArray() ? itemNode.path(0) : itemNode;
-    }
-
-    private TourApiAccommodation toAccommodation(JsonNode item) {
-        return new TourApiAccommodation(
-                item.path("contentid").asString(""),
-                item.path("title").asString(""),
-                item.path("addr1").asString(""),
-                item.path("mapx").asDouble(0),
-                item.path("mapy").asDouble(0),
-                item.path("firstimage").asString(null)
-        );
     }
 
     private TourApiPlace toPlace(JsonNode item) {

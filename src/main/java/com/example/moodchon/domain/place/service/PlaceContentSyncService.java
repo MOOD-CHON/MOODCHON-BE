@@ -38,7 +38,7 @@ public class PlaceContentSyncService {
         }
     }
 
-    private void syncPlace(TourApiPlace tourApiPlace, PlaceCategory category) {
+    public Place syncPlace(TourApiPlace tourApiPlace, PlaceCategory category) {
         Place place = placeRepository.findByExternalContentId(tourApiPlace.contentId())
                 .orElseGet(() -> placeRepository.save(Place.builder()
                         .externalContentId(tourApiPlace.contentId())
@@ -55,12 +55,13 @@ public class PlaceContentSyncService {
         }
 
         if (postRepository.existsByPlaceId(place.getId())) {
-            return;
+            return place;
         }
 
         List<Post> posts = tourApiClient.fetchImages(tourApiPlace.contentId()).stream()
                 .map(imageUrl -> Post.builder().place(place).imageUrl(imageUrl).build())
                 .toList();
         postRepository.saveAll(posts);
+        return place;
     }
 }

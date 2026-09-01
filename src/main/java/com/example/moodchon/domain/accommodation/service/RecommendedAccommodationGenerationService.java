@@ -4,13 +4,15 @@ import com.example.moodchon.domain.accommodation.ai.AccommodationMatchContext;
 import com.example.moodchon.domain.accommodation.ai.AccommodationMatchResult;
 import com.example.moodchon.domain.accommodation.ai.AccommodationMatcher;
 import com.example.moodchon.domain.accommodation.entity.RecommendedAccommodation;
-import com.example.moodchon.domain.accommodation.external.TourApiAccommodation;
 import com.example.moodchon.domain.accommodation.external.TourApiClient;
+import com.example.moodchon.domain.accommodation.external.TourApiPlace;
 import com.example.moodchon.domain.accommodation.repository.RecommendedAccommodationRepository;
 import com.example.moodchon.domain.chonkangs.entity.Chonkangs;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsRepository;
 import com.example.moodchon.domain.chonkangs.service.ChonkangsAccessValidator;
 import com.example.moodchon.domain.place.entity.Place;
+import com.example.moodchon.domain.place.entity.PlaceCategory;
+import com.example.moodchon.domain.place.service.PlaceContentSyncService;
 import com.example.moodchon.global.exception.CustomException;
 import com.example.moodchon.global.exception.ErrorCode;
 import java.util.ArrayList;
@@ -33,7 +35,7 @@ public class RecommendedAccommodationGenerationService {
     private final ChonkangsAccessValidator chonkangsAccessValidator;
     private final ChonkangsRepository chonkangsRepository;
     private final TourApiClient tourApiClient;
-    private final AccommodationPlaceUpsertService accommodationPlaceUpsertService;
+    private final PlaceContentSyncService placeContentSyncService;
     private final AccommodationMatcher accommodationMatcher;
     private final RecommendedAccommodationRepository recommendedAccommodationRepository;
 
@@ -47,10 +49,10 @@ public class RecommendedAccommodationGenerationService {
             throw new CustomException(ErrorCode.MOOD_NOT_DECIDED);
         }
 
-        List<TourApiAccommodation> tourApiAccommodations = tourApiClient.searchAccommodations(
-                chonkang.getDesiredRegion(), CANDIDATE_COUNT);
-        List<Place> candidates = tourApiAccommodations.stream()
-                .map(accommodationPlaceUpsertService::upsert)
+        List<TourApiPlace> tourApiPlaces = tourApiClient.searchPlaces(
+                chonkang.getDesiredRegion(), PlaceCategory.ACCOMMODATION, CANDIDATE_COUNT);
+        List<Place> candidates = tourApiPlaces.stream()
+                .map(tourApiPlace -> placeContentSyncService.syncPlace(tourApiPlace, PlaceCategory.ACCOMMODATION))
                 .toList();
 
         recommendedAccommodationRepository.deleteAllByChonkangId(chonkangId);
