@@ -27,6 +27,10 @@ public class SaveFolderCommandService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND));
 
+        if (saveFolderRepository.countByUserId(userId) >= SaveFolder.MAX_FOLDER_COUNT) {
+            throw new CustomException(ErrorCode.SAVE_FOLDER_LIMIT_EXCEEDED);
+        }
+
         SaveFolder folder = saveFolderRepository.save(SaveFolder.builder()
                 .user(user)
                 .name(request.name())

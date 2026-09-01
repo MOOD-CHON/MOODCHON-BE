@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface SaveFolderRepository extends JpaRepository<SaveFolder, Long> {
 
     List<SaveFolder> findAllByUserId(Long userId);
+
+    long countByUserId(Long userId);
 }
