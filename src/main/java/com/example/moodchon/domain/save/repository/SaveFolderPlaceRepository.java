@@ -9,4 +9,10 @@ public interface SaveFolderPlaceRepository extends JpaRepository<SaveFolderPlace
     boolean existsBySaveFolder_UserIdAndPlaceId(Long userId, Long placeId);
 
     List<SaveFolderPlace> findAllByPlaceIdAndSaveFolder_UserId(Long placeId, Long userId);
+
+    List<SaveFolderPlace> findAllBySaveFolderIdOrderByIdDesc(Long saveFolderId);
+
+    void deleteAllBySaveFolderId(Long saveFolderId);
+
+    void deleteBySaveFolderIdAndPlaceId(Long saveFolderId, Long placeId);
 }

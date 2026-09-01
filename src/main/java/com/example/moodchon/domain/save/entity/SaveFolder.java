@@ -23,6 +23,7 @@ import lombok.NoArgsConstructor;
 public class SaveFolder extends BaseEntity {
 
     public static final int MAX_NAME_LENGTH = 12;
+    public static final int MAX_FOLDER_COUNT = 6;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

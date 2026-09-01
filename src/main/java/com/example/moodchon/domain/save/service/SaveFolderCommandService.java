@@ -3,6 +3,7 @@ package com.example.moodchon.domain.save.service;
 import com.example.moodchon.domain.save.dto.request.CreateSaveFolderRequest;
 import com.example.moodchon.domain.save.dto.response.SaveFolderResponse;
 import com.example.moodchon.domain.save.entity.SaveFolder;
+import com.example.moodchon.domain.save.repository.SaveFolderPlaceRepository;
 import com.example.moodchon.domain.save.repository.SaveFolderRepository;
 import com.example.moodchon.domain.user.entity.User;
 import com.example.moodchon.domain.user.repository.UserRepository;
@@ -17,12 +18,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class SaveFolderCommandService {
 
+    private final SaveFolderAccessValidator saveFolderAccessValidator;
     private final SaveFolderRepository saveFolderRepository;
+    private final SaveFolderPlaceRepository saveFolderPlaceRepository;
     private final UserRepository userRepository;
 
     public SaveFolderResponse create(Long userId, CreateSaveFolderRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND));
+
+        if (saveFolderRepository.countByUserId(userId) >= SaveFolder.MAX_FOLDER_COUNT) {
+            throw new CustomException(ErrorCode.SAVE_FOLDER_LIMIT_EXCEEDED);
+        }
 
         SaveFolder folder = saveFolderRepository.save(SaveFolder.builder()
                 .user(user)
@@ -30,5 +37,18 @@ public class SaveFolderCommandService {
                 .build());
 
         return SaveFolderResponse.of(folder);
+    }
+
+    public void delete(Long folderId, Long userId) {
+        SaveFolder folder = saveFolderAccessValidator.validateOwner(folderId, userId);
+
+        saveFolderPlaceRepository.deleteAllBySaveFolderId(folderId);
+        saveFolderRepository.delete(folder);
+    }
+
+    public void removePlace(Long folderId, Long userId, Long placeId) {
+        saveFolderAccessValidator.validateOwner(folderId, userId);
+
+        saveFolderPlaceRepository.deleteBySaveFolderIdAndPlaceId(folderId, placeId);
     }
 }

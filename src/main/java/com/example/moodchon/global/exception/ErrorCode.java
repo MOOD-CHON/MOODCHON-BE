@@ -21,6 +21,7 @@ public enum ErrorCode {
     ALREADY_JOINED(HttpStatus.CONFLICT, "C011", "이미 참여한 촌캉스입니다."),
     TOUR_API_REQUEST_FAILED(HttpStatus.BAD_GATEWAY, "C012", "숙소 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요."),
     MOOD_NOT_DECIDED(HttpStatus.CONFLICT, "C013", "무드가 아직 결정되지 않아 숙소를 추천할 수 없습니다."),
+    SAVE_FOLDER_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "C014", "폴더는 최대 6개까지 만들 수 있어요."),
 
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "A001", "인증이 필요합니다."),
     FORBIDDEN(HttpStatus.FORBIDDEN, "A002", "접근 권한이 없습니다.");
