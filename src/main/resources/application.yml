@@ -30,3 +30,6 @@ openai:
 
 tour-api:
   service-key: ${TOUR_API_SERVICE_KEY:}
+
+apple:
+  bundle-id: ${APPLE_BUNDLE_ID:com.moodchon.app}
