@@ -63,6 +63,85 @@ public class TourApiClient {
         }
     }
 
+    // detailIntro2 - 장소 유형별(관광지/문화시설/레포츠, 행사/공연/축제, 음식점, 쇼핑) 이용안내·편의시설 원본 필드.
+    public TourApiIntroFields fetchIntro(String contentId, PlaceCategory category) {
+        try {
+            String rawResponseBody = restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("https")
+                            .host("apis.data.go.kr")
+                            .path("/B551011/KorService2/detailIntro2")
+                            .queryParam("serviceKey", properties.serviceKey())
+                            .queryParam("MobileOS", "ETC")
+                            .queryParam("MobileApp", "moodchon")
+                            .queryParam("_type", "json")
+                            .queryParam("contentId", contentId)
+                            .queryParam("contentTypeId", detailContentTypeId(category))
+                            .build())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .body(String.class);
+
+            JsonNode root = jsonMapper.readTree(rawResponseBody);
+            JsonNode item = firstItem(root.path("response").path("body").path("items").path("item"));
+            return toIntroFields(item);
+        } catch (RestClientException | JacksonException e) {
+            throw new CustomException(ErrorCode.TOUR_API_REQUEST_FAILED);
+        }
+    }
+
+    // TourAPI는 EVENT/PERFORMANCE/FESTIVAL을 전부 15(축제공연행사)로 취급한다.
+    private static String detailContentTypeId(PlaceCategory category) {
+        return switch (category) {
+            case TOURIST_SPOT -> "12";
+            case CULTURAL_FACILITY -> "14";
+            case EVENT, PERFORMANCE, FESTIVAL -> "15";
+            case LEISURE_SPORTS -> "28";
+            case SHOPPING -> "38";
+            case RESTAURANT -> "39";
+            case ACCOMMODATION -> "32";
+        };
+    }
+
+    private TourApiIntroFields toIntroFields(JsonNode item) {
+        return new TourApiIntroFields(
+                item.path("restdate").asString(""),
+                item.path("usetime").asString(""),
+                item.path("useseason").asString(""),
+                item.path("parking").asString(""),
+                item.path("parkingfee").asString(""),
+                item.path("infocenter").asString(""),
+                item.path("accomcount").asString(""),
+                item.path("chkbabycarriage").asString(""),
+                item.path("chkpet").asString(""),
+                item.path("chkcreditcard").asString(""),
+                item.path("expguide").asString(""),
+                item.path("expagerange").asString(""),
+                item.path("eventstartdate").asString(""),
+                item.path("eventenddate").asString(""),
+                item.path("playtime").asString(""),
+                item.path("usetimefestival").asString(""),
+                item.path("agelimit").asString(""),
+                item.path("eventplace").asString(""),
+                item.path("program").asString(""),
+                item.path("sponsor1").asString(""),
+                item.path("sponsor1tel").asString(""),
+                item.path("eventhomepage").asString(""),
+                item.path("firstmenu").asString(""),
+                item.path("treatmenu").asString(""),
+                item.path("opentimefood").asString(""),
+                item.path("restdatefood").asString(""),
+                item.path("packing").asString(""),
+                item.path("infocenterfood").asString(""),
+                item.path("saleitem").asString(""),
+                item.path("opentime").asString(""),
+                item.path("restdateshopping").asString(""),
+                item.path("parkingshopping").asString(""),
+                item.path("shopguide").asString(""),
+                item.path("infocentershopping").asString("")
+        );
+    }
+
     public List<String> fetchImages(String contentId) {
         try {
             String rawResponseBody = restClient.get()
