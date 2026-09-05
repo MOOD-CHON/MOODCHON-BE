@@ -228,6 +228,53 @@ public class TourApiClient {
         }
     }
 
+    // searchKeyword2 - contentTypeId 없이 전 카테고리 대상 검색("일정에 장소 추가하기" 검색).
+    public List<TourApiPlaceSearchResult> searchAnyCategory(String keyword, int numOfRows) {
+        try {
+            String rawResponseBody = restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("https")
+                            .host("apis.data.go.kr")
+                            .path("/B551011/KorService2/searchKeyword2")
+                            .queryParam("serviceKey", properties.serviceKey())
+                            .queryParam("MobileOS", "ETC")
+                            .queryParam("MobileApp", "moodchon")
+                            .queryParam("_type", "json")
+                            .queryParam("arrange", "A")
+                            .queryParam("keyword", keyword)
+                            .queryParam("numOfRows", numOfRows)
+                            .queryParam("pageNo", 1)
+                            .build())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .body(String.class);
+
+            return parseItems(rawResponseBody, this::toPlaceSearchResult).stream()
+                    .filter(result -> result.category() != null)
+                    .toList();
+        } catch (RestClientException e) {
+            throw new CustomException(ErrorCode.TOUR_API_REQUEST_FAILED);
+        }
+    }
+
+    private TourApiPlaceSearchResult toPlaceSearchResult(JsonNode item) {
+        return new TourApiPlaceSearchResult(toPlace(item), resolveCategory(item.path("contenttypeid").asString("")));
+    }
+
+    // EVENT/PERFORMANCE/FESTIVAL은 TourAPI에서 전부 15(축제공연행사)로 통합되어 있어 FESTIVAL로만 구분한다.
+    private static PlaceCategory resolveCategory(String contentTypeId) {
+        return switch (contentTypeId) {
+            case "12" -> PlaceCategory.TOURIST_SPOT;
+            case "14" -> PlaceCategory.CULTURAL_FACILITY;
+            case "15" -> PlaceCategory.FESTIVAL;
+            case "28" -> PlaceCategory.LEISURE_SPORTS;
+            case "32" -> PlaceCategory.ACCOMMODATION;
+            case "38" -> PlaceCategory.SHOPPING;
+            case "39" -> PlaceCategory.RESTAURANT;
+            default -> null;
+        };
+    }
+
     private <T> List<T> parseItems(String rawResponseBody, java.util.function.Function<JsonNode, T> mapper) {
         try {
             JsonNode root = jsonMapper.readTree(rawResponseBody);
