@@ -103,6 +103,15 @@ public class ChonkangsMainQueryService {
                         Collectors.mapping(Post::getImageUrl, Collectors.toList())));
     }
 
+        return recommendations.stream()
+                .map(recommendation -> {
+                    List<String> images = imagesByPlaceId.getOrDefault(recommendation.getPlace().getId(), List.of());
+                    long voteCount = accommodationVoteRepository.countByRecommendedAccommodationId(recommendation.getId());
+                    boolean votedByMe = accommodationVoteRepository
+                            .existsByRecommendedAccommodationIdAndUserId(recommendation.getId(), userId);
+                    return RecommendedAccommodationResponse.of(recommendation, images, voteCount, votedByMe);
+                })
+                .toList();
     private RecommendedAccommodationResponse toResponse(RecommendedAccommodation recommended, Long userId,
                                                           Map<Long, List<String>> imagesByPlaceId) {
         List<String> images = imagesByPlaceId.getOrDefault(recommended.getPlace().getId(), List.of());

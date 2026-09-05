@@ -20,7 +20,7 @@ public record RecommendedAccommodationResponse(
 ) {
 
     public static RecommendedAccommodationResponse of(RecommendedAccommodation recommendedAccommodation,
-                                                        long voteCount, boolean votedByMe, List<String> images) {
+                                                        List<String> images) {
         Place place = recommendedAccommodation.getPlace();
         return new RecommendedAccommodationResponse(
                 place.getId(),
