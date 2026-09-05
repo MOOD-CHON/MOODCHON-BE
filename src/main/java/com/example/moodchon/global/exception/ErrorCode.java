@@ -24,7 +24,8 @@ public enum ErrorCode {
     SAVE_FOLDER_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "C014", "폴더는 최대 6개까지 만들 수 있어요."),
 
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "A001", "인증이 필요합니다."),
-    FORBIDDEN(HttpStatus.FORBIDDEN, "A002", "접근 권한이 없습니다.");
+    FORBIDDEN(HttpStatus.FORBIDDEN, "A002", "접근 권한이 없습니다."),
+    SOCIAL_LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "A003", "소셜 로그인 인증에 실패했습니다.");
 
     private final HttpStatus status;
     private final String code;
