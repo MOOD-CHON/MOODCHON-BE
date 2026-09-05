@@ -85,13 +85,23 @@ public class ChonkangsMainQueryService {
                 .limit(RECOMMENDED_ACCOMMODATION_PREVIEW_COUNT)
                 .toList();
 
+        Map<Long, List<String>> imagesByPlaceId = imagesByPlaceId(recommendations);
+
+        return recommendations.stream()
+                .map(recommendation -> toResponse(recommendation, userId, imagesByPlaceId))
+                .toList();
+    }
+
+    private Map<Long, List<String>> imagesByPlaceId(List<RecommendedAccommodation> recommendations) {
         List<Long> placeIds = recommendations.stream()
                 .map(recommendation -> recommendation.getPlace().getId())
                 .toList();
-        Map<Long, List<String>> imagesByPlaceId = postRepository.findAllByPlaceIdIn(placeIds).stream()
+
+        return postRepository.findAllByPlaceIdIn(placeIds).stream()
                 .collect(Collectors.groupingBy(
                         post -> post.getPlace().getId(),
                         Collectors.mapping(Post::getImageUrl, Collectors.toList())));
+    }
 
         return recommendations.stream()
                 .map(recommendation -> {
@@ -102,6 +112,13 @@ public class ChonkangsMainQueryService {
                     return RecommendedAccommodationResponse.of(recommendation, images, voteCount, votedByMe);
                 })
                 .toList();
+    private RecommendedAccommodationResponse toResponse(RecommendedAccommodation recommended, Long userId,
+                                                          Map<Long, List<String>> imagesByPlaceId) {
+        List<String> images = imagesByPlaceId.getOrDefault(recommended.getPlace().getId(), List.of());
+        long voteCount = accommodationVoteRepository.countByRecommendedAccommodationId(recommended.getId());
+        boolean votedByMe = accommodationVoteRepository
+                .existsByRecommendedAccommodationIdAndUserId(recommended.getId(), userId);
+        return RecommendedAccommodationResponse.of(recommended, images, voteCount, votedByMe);
     }
 
     private ChonkangMainResponse buildAccommodationConfirmed(Chonkangs chonkang) {
