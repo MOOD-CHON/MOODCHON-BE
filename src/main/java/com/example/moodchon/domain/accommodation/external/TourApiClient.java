@@ -97,33 +97,6 @@ public class TourApiClient {
     }
 
     // searchKeyword2 - 지역 무관 숙소명 키워드 검색("직접 찾은 숙소").
-    public List<TourApiPlace> searchByKeyword(String keyword, int numOfRows) {
-        try {
-            String rawResponseBody = restClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .scheme("https")
-                            .host("apis.data.go.kr")
-                            .path("/B551011/KorService2/searchKeyword2")
-                            .queryParam("serviceKey", properties.serviceKey())
-                            .queryParam("MobileOS", "ETC")
-                            .queryParam("MobileApp", "moodchon")
-                            .queryParam("_type", "json")
-                            .queryParam("arrange", "A")
-                            .queryParam("contentTypeId", TourApiCategoryCode.resolve(PlaceCategory.ACCOMMODATION))
-                            .queryParam("keyword", keyword)
-                            .queryParam("numOfRows", numOfRows)
-                            .queryParam("pageNo", 1)
-                            .build())
-                    .accept(MediaType.APPLICATION_JSON)
-                    .retrieve()
-                    .body(String.class);
-
-            return parseItems(rawResponseBody, this::toPlace);
-        } catch (RestClientException e) {
-            throw new CustomException(ErrorCode.TOUR_API_REQUEST_FAILED);
-        }
-    }
-
     private String requestAreaBasedList(Region region, String contentTypeId, int numOfRows) {
         try {
             return restClient.get()
