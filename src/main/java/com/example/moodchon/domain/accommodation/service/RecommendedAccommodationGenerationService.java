@@ -6,6 +6,7 @@ import com.example.moodchon.domain.accommodation.ai.AccommodationMatcher;
 import com.example.moodchon.domain.accommodation.entity.RecommendedAccommodation;
 import com.example.moodchon.domain.accommodation.external.TourApiClient;
 import com.example.moodchon.domain.accommodation.external.TourApiPlace;
+import com.example.moodchon.domain.accommodation.repository.AccommodationVoteRepository;
 import com.example.moodchon.domain.accommodation.repository.RecommendedAccommodationRepository;
 import com.example.moodchon.domain.chonkangs.entity.Chonkangs;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsRepository;
@@ -38,6 +39,7 @@ public class RecommendedAccommodationGenerationService {
     private final PlaceContentSyncService placeContentSyncService;
     private final AccommodationMatcher accommodationMatcher;
     private final RecommendedAccommodationRepository recommendedAccommodationRepository;
+    private final AccommodationVoteRepository accommodationVoteRepository;
 
     public void generate(Long chonkangId, Long userId) {
         chonkangsAccessValidator.validateMember(chonkangId, userId);
@@ -55,6 +57,11 @@ public class RecommendedAccommodationGenerationService {
                 .map(tourApiPlace -> placeContentSyncService.syncPlace(tourApiPlace, PlaceCategory.ACCOMMODATION))
                 .toList();
 
+        List<Long> existingIds = recommendedAccommodationRepository.findAllByChonkangIdOrderByRankAsc(chonkangId)
+                .stream()
+                .map(RecommendedAccommodation::getId)
+                .toList();
+        accommodationVoteRepository.deleteAllByRecommendedAccommodationIdIn(existingIds);
         recommendedAccommodationRepository.deleteAllByChonkangId(chonkangId);
         recommendedAccommodationRepository.flush();
 
