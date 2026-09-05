@@ -8,17 +8,12 @@ import com.example.moodchon.domain.place.entity.Place;
 import com.example.moodchon.domain.place.entity.PlaceCategory;
 import com.example.moodchon.domain.place.entity.Post;
 import com.example.moodchon.domain.place.repository.PostRepository;
-import com.example.moodchon.domain.recommendation.dto.response.EventPlaceDetailInfo;
-import com.example.moodchon.domain.recommendation.dto.response.GeneralPlaceDetailInfo;
 import com.example.moodchon.domain.recommendation.dto.response.ItineraryItemDetailResponse;
-import com.example.moodchon.domain.recommendation.dto.response.RestaurantPlaceDetailInfo;
-import com.example.moodchon.domain.recommendation.dto.response.ShoppingPlaceDetailInfo;
 import com.example.moodchon.domain.recommendation.entity.RecommendedItineraryItem;
 import com.example.moodchon.domain.recommendation.repository.RecommendedItineraryItemRepository;
 import com.example.moodchon.global.exception.CustomException;
 import com.example.moodchon.global.exception.ErrorCode;
 import java.util.List;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,11 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ItineraryItemDetailQueryService {
-
-    private static final Set<PlaceCategory> GENERAL_CATEGORIES =
-            Set.of(PlaceCategory.TOURIST_SPOT, PlaceCategory.CULTURAL_FACILITY, PlaceCategory.LEISURE_SPORTS);
-    private static final Set<PlaceCategory> EVENT_CATEGORIES =
-            Set.of(PlaceCategory.EVENT, PlaceCategory.PERFORMANCE, PlaceCategory.FESTIVAL);
 
     private final ChonkangsAccessValidator chonkangsAccessValidator;
     private final RecommendedItineraryItemRepository recommendedItineraryItemRepository;
@@ -58,16 +48,9 @@ public class ItineraryItemDetailQueryService {
 
         PlaceCategory category = place.getCategory();
         TourApiIntroFields introFields = tourApiClient.fetchIntro(place.getExternalContentId(), category);
+        PlaceCategoryDetailMapper.Blocks blocks = PlaceCategoryDetailMapper.map(category, introFields);
 
-        GeneralPlaceDetailInfo generalInfo = GENERAL_CATEGORIES.contains(category)
-                ? GeneralPlaceDetailInfo.of(introFields) : null;
-        EventPlaceDetailInfo eventInfo = EVENT_CATEGORIES.contains(category)
-                ? EventPlaceDetailInfo.of(introFields) : null;
-        RestaurantPlaceDetailInfo restaurantInfo = category == PlaceCategory.RESTAURANT
-                ? RestaurantPlaceDetailInfo.of(introFields) : null;
-        ShoppingPlaceDetailInfo shoppingInfo = category == PlaceCategory.SHOPPING
-                ? ShoppingPlaceDetailInfo.of(introFields) : null;
-
-        return ItineraryItemDetailResponse.of(item, tags, images, generalInfo, eventInfo, restaurantInfo, shoppingInfo);
+        return ItineraryItemDetailResponse.of(item, tags, images, blocks.generalInfo(), blocks.eventInfo(),
+                blocks.restaurantInfo(), blocks.shoppingInfo());
     }
 }

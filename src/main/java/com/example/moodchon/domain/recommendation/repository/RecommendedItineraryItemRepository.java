@@ -8,4 +8,7 @@ public interface RecommendedItineraryItemRepository extends JpaRepository<Recomm
 
     List<RecommendedItineraryItem> findAllByRecommendedItineraryIdOrderByDayNumberAscOrderInDayAsc(
             Long recommendedItineraryId);
+
+    List<RecommendedItineraryItem> findAllByRecommendedItineraryIdAndDayNumberOrderByOrderInDayAsc(
+            Long recommendedItineraryId, int dayNumber);
 }
