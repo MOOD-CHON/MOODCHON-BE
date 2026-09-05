@@ -37,6 +37,10 @@ jobs:
           cache: gradle
 
       - name: Run tests
+        env:
+          JWT_SECRET: test-jwt-secret-for-ci-pipeline-only-do-not-use-in-prod
+          JWT_ACCESS_TOKEN_EXPIRATION: 3600000
+          JWT_REFRESH_TOKEN_EXPIRATION: 1209600000
         run: ./gradlew test --no-daemon
 
   build-and-push:
