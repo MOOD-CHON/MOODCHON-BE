@@ -1,6 +1,8 @@
 package com.example.moodchon.domain.accommodation.controller;
 
+import com.example.moodchon.domain.accommodation.dto.response.AccommodationVoterResponse;
 import com.example.moodchon.domain.accommodation.dto.response.RecommendedAccommodationResponse;
+import com.example.moodchon.domain.accommodation.service.AccommodationVoteService;
 import com.example.moodchon.domain.accommodation.service.RecommendedAccommodationGenerationService;
 import com.example.moodchon.domain.accommodation.service.RecommendedAccommodationQueryService;
 import com.example.moodchon.global.common.ApiResponse;
@@ -20,6 +22,7 @@ public class RecommendedAccommodationController {
 
     private final RecommendedAccommodationGenerationService recommendedAccommodationGenerationService;
     private final RecommendedAccommodationQueryService recommendedAccommodationQueryService;
+    private final AccommodationVoteService accommodationVoteService;
 
     @PostMapping("/generate")
     public ApiResponse<Void> generate(
@@ -34,5 +37,30 @@ public class RecommendedAccommodationController {
             @PathVariable Long chonkangId,
             @AuthenticationPrincipal Long userId) {
         return ApiResponse.success(recommendedAccommodationQueryService.getAll(chonkangId, userId));
+    }
+
+    @GetMapping("/{placeId}")
+    public ApiResponse<RecommendedAccommodationResponse> getOne(
+            @PathVariable Long chonkangId,
+            @PathVariable Long placeId,
+            @AuthenticationPrincipal Long userId) {
+        return ApiResponse.success(recommendedAccommodationQueryService.getOne(chonkangId, userId, placeId));
+    }
+
+    @PostMapping("/{placeId}/vote")
+    public ApiResponse<Void> vote(
+            @PathVariable Long chonkangId,
+            @PathVariable Long placeId,
+            @AuthenticationPrincipal Long userId) {
+        accommodationVoteService.vote(chonkangId, userId, placeId);
+        return ApiResponse.success();
+    }
+
+    @GetMapping("/{placeId}/voters")
+    public ApiResponse<List<AccommodationVoterResponse>> getVoters(
+            @PathVariable Long chonkangId,
+            @PathVariable Long placeId,
+            @AuthenticationPrincipal Long userId) {
+        return ApiResponse.success(recommendedAccommodationQueryService.getVoters(chonkangId, userId, placeId));
     }
 }

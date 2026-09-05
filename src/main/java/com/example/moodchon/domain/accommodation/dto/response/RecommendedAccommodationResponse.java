@@ -12,12 +12,15 @@ public record RecommendedAccommodationResponse(
         String description,
         List<String> images,
         int matchScore,
+        int rank,
         List<String> tags,
-        List<String> highlights
+        List<String> highlights,
+        long voteCount,
+        boolean votedByMe
 ) {
 
     public static RecommendedAccommodationResponse of(RecommendedAccommodation recommendedAccommodation,
-                                                        List<String> images) {
+                                                        long voteCount, boolean votedByMe, List<String> images) {
         Place place = recommendedAccommodation.getPlace();
         return new RecommendedAccommodationResponse(
                 place.getId(),
@@ -27,8 +30,11 @@ public record RecommendedAccommodationResponse(
                 place.getDescription(),
                 images,
                 recommendedAccommodation.getMatchScore(),
+                recommendedAccommodation.getRank(),
                 recommendedAccommodation.getTags(),
-                recommendedAccommodation.getHighlights()
+                recommendedAccommodation.getHighlights(),
+                voteCount,
+                votedByMe
         );
     }
 }

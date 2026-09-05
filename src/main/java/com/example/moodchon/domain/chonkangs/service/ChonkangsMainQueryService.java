@@ -2,6 +2,7 @@ package com.example.moodchon.domain.chonkangs.service;
 
 import com.example.moodchon.domain.accommodation.dto.response.RecommendedAccommodationResponse;
 import com.example.moodchon.domain.accommodation.entity.RecommendedAccommodation;
+import com.example.moodchon.domain.accommodation.repository.AccommodationVoteRepository;
 import com.example.moodchon.domain.accommodation.repository.RecommendedAccommodationRepository;
 import com.example.moodchon.domain.chonkangs.dto.response.ChonkangMainResponse;
 import com.example.moodchon.domain.chonkangs.dto.response.ConfirmedAccommodationResponse;
@@ -43,6 +44,7 @@ public class ChonkangsMainQueryService {
     private final ChonkangsMoodSelectionRepository chonkangsMoodSelectionRepository;
     private final RecommendedAccommodationRepository recommendedAccommodationRepository;
     private final PostRepository postRepository;
+    private final AccommodationVoteRepository accommodationVoteRepository;
     private final RecommendedItineraryRepository recommendedItineraryRepository;
     private final RecommendedItineraryItemRepository recommendedItineraryItemRepository;
 
@@ -57,7 +59,8 @@ public class ChonkangsMainQueryService {
             return buildAccommodationConfirmed(chonkang);
         }
         if (status == ChonkangsMainStatus.MOOD_DECIDED) {
-            return ChonkangMainResponse.moodDecided(MoodResultResponse.of(chonkang), buildRecommendedAccommodations(chonkangId));
+            return ChonkangMainResponse.moodDecided(
+                    MoodResultResponse.of(chonkang), buildRecommendedAccommodations(chonkangId, userId));
         }
 
         return ChonkangMainResponse.moodVoting(buildMoodProgress(chonkangId));
@@ -76,25 +79,37 @@ public class ChonkangsMainQueryService {
         return MoodProgressResponse.of(memberProgress);
     }
 
-    private List<RecommendedAccommodationResponse> buildRecommendedAccommodations(Long chonkangId) {
+    private List<RecommendedAccommodationResponse> buildRecommendedAccommodations(Long chonkangId, Long userId) {
         List<RecommendedAccommodation> recommendations = recommendedAccommodationRepository
                 .findAllByChonkangIdOrderByRankAsc(chonkangId).stream()
                 .limit(RECOMMENDED_ACCOMMODATION_PREVIEW_COUNT)
                 .toList();
 
+        Map<Long, List<String>> imagesByPlaceId = imagesByPlaceId(recommendations);
+
+        return recommendations.stream()
+                .map(recommendation -> toResponse(recommendation, userId, imagesByPlaceId))
+                .toList();
+    }
+
+    private Map<Long, List<String>> imagesByPlaceId(List<RecommendedAccommodation> recommendations) {
         List<Long> placeIds = recommendations.stream()
                 .map(recommendation -> recommendation.getPlace().getId())
                 .toList();
-        Map<Long, List<String>> imagesByPlaceId = postRepository.findAllByPlaceIdIn(placeIds).stream()
+
+        return postRepository.findAllByPlaceIdIn(placeIds).stream()
                 .collect(Collectors.groupingBy(
                         post -> post.getPlace().getId(),
                         Collectors.mapping(Post::getImageUrl, Collectors.toList())));
+    }
 
-        return recommendations.stream()
-                .map(recommendation -> RecommendedAccommodationResponse.of(
-                        recommendation,
-                        imagesByPlaceId.getOrDefault(recommendation.getPlace().getId(), List.of())))
-                .toList();
+    private RecommendedAccommodationResponse toResponse(RecommendedAccommodation recommended, Long userId,
+                                                          Map<Long, List<String>> imagesByPlaceId) {
+        List<String> images = imagesByPlaceId.getOrDefault(recommended.getPlace().getId(), List.of());
+        long voteCount = accommodationVoteRepository.countByRecommendedAccommodationId(recommended.getId());
+        boolean votedByMe = accommodationVoteRepository
+                .existsByRecommendedAccommodationIdAndUserId(recommended.getId(), userId);
+        return RecommendedAccommodationResponse.of(recommended, images, voteCount, votedByMe);
     }
 
     private ChonkangMainResponse buildAccommodationConfirmed(Chonkangs chonkang) {

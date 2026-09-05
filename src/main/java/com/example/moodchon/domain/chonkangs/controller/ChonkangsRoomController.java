@@ -6,11 +6,13 @@ import com.example.moodchon.domain.chonkangs.dto.response.ChonkangInviteCodeResp
 import com.example.moodchon.domain.chonkangs.dto.response.ChonkangMainResponse;
 import com.example.moodchon.domain.chonkangs.dto.response.ChonkangMemberResponse;
 import com.example.moodchon.domain.chonkangs.dto.response.LeaveChonkangResponse;
+import com.example.moodchon.domain.chonkangs.dto.response.MoodResultDetailResponse;
 import com.example.moodchon.domain.chonkangs.dto.response.UpdateChonkangInfoResponse;
 import com.example.moodchon.domain.chonkangs.service.ChonkangsInfoUpdateService;
 import com.example.moodchon.domain.chonkangs.service.ChonkangsMainQueryService;
 import com.example.moodchon.domain.chonkangs.service.ChonkangsMembershipService;
 import com.example.moodchon.domain.chonkangs.service.ChonkangsMoodReminderService;
+import com.example.moodchon.domain.chonkangs.service.ChonkangsMoodResultQueryService;
 import com.example.moodchon.domain.chonkangs.service.ChonkangsMoodSelectionCommandService;
 import com.example.moodchon.global.common.ApiResponse;
 import jakarta.validation.Valid;
@@ -35,12 +37,20 @@ public class ChonkangsRoomController {
     private final ChonkangsMembershipService chonkangsMembershipService;
     private final ChonkangsMainQueryService chonkangsMainQueryService;
     private final ChonkangsMoodReminderService chonkangsMoodReminderService;
+    private final ChonkangsMoodResultQueryService chonkangsMoodResultQueryService;
 
     @GetMapping("/main")
     public ApiResponse<ChonkangMainResponse> getMain(
             @PathVariable Long chonkangId,
             @AuthenticationPrincipal Long userId) {
         return ApiResponse.success(chonkangsMainQueryService.getMain(chonkangId, userId));
+    }
+
+    @GetMapping("/mood-result/detail")
+    public ApiResponse<MoodResultDetailResponse> getMoodResultDetail(
+            @PathVariable Long chonkangId,
+            @AuthenticationPrincipal Long userId) {
+        return ApiResponse.success(chonkangsMoodResultQueryService.getDetail(chonkangId, userId));
     }
 
     @PatchMapping("/info")
