@@ -1,8 +1,10 @@
 package com.example.moodchon.domain.recommendation.controller;
 
 import com.example.moodchon.domain.recommendation.dto.request.GenerateItineraryRequest;
+import com.example.moodchon.domain.recommendation.dto.response.ItineraryItemDetailResponse;
 import com.example.moodchon.domain.recommendation.dto.response.RecommendedItineraryResponse;
 import com.example.moodchon.domain.recommendation.dto.response.RecommendedItinerarySummaryResponse;
+import com.example.moodchon.domain.recommendation.service.ItineraryItemDetailQueryService;
 import com.example.moodchon.domain.recommendation.service.RecommendedItineraryCommandService;
 import com.example.moodchon.domain.recommendation.service.RecommendedItineraryGenerationService;
 import com.example.moodchon.domain.recommendation.service.RecommendedItineraryQueryService;
@@ -25,12 +27,21 @@ public class RecommendedItineraryController {
     private final RecommendedItineraryQueryService recommendedItineraryQueryService;
     private final RecommendedItineraryCommandService recommendedItineraryCommandService;
     private final RecommendedItineraryGenerationService recommendedItineraryGenerationService;
+    private final ItineraryItemDetailQueryService itineraryItemDetailQueryService;
 
     @GetMapping
     public ApiResponse<RecommendedItineraryResponse> getDetail(
             @PathVariable Long chonkangId,
             @AuthenticationPrincipal Long userId) {
         return ApiResponse.success(recommendedItineraryQueryService.getDetail(chonkangId, userId));
+    }
+
+    @GetMapping("/items/{itemId}")
+    public ApiResponse<ItineraryItemDetailResponse> getItemDetail(
+            @PathVariable Long chonkangId,
+            @PathVariable Long itemId,
+            @AuthenticationPrincipal Long userId) {
+        return ApiResponse.success(itineraryItemDetailQueryService.getDetail(chonkangId, userId, itemId));
     }
 
     @GetMapping("/summary")
