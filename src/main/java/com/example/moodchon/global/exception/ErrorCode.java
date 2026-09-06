@@ -23,10 +23,12 @@ public enum ErrorCode {
     MOOD_NOT_DECIDED(HttpStatus.CONFLICT, "C013", "무드가 아직 결정되지 않아 숙소를 추천할 수 없습니다."),
     SAVE_FOLDER_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "C014", "폴더는 최대 6개까지 만들 수 있어요."),
     ITINERARY_NOT_COMMITTED(HttpStatus.CONFLICT, "C015", "확정된 일정만 수정할 수 있습니다."),
+    UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "C016", "지원하지 않는 Content-Type입니다."),
 
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "A001", "인증이 필요합니다."),
     FORBIDDEN(HttpStatus.FORBIDDEN, "A002", "접근 권한이 없습니다."),
-    SOCIAL_LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "A003", "소셜 로그인 인증에 실패했습니다.");
+    SOCIAL_LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "A003", "소셜 로그인 인증에 실패했습니다."),
+    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "A004", "유효하지 않은 리프레시 토큰입니다. 다시 로그인해주세요.");
 
     private final HttpStatus status;
     private final String code;

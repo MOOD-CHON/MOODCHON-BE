@@ -27,6 +27,9 @@ import org.hibernate.annotations.SQLRestriction;
 @SQLRestriction("deleted_at IS NULL")
 public class User extends BaseEntity {
 
+    private static final String WITHDRAWN_PROVIDER_ID_PREFIX = "withdrawn_";
+    private static final String WITHDRAWN_NICKNAME = "탈퇴한 사용자";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -60,11 +63,6 @@ public class User extends BaseEntity {
         this.notificationEnabled = true;
     }
 
-    public void updateProfile(String nickname, String profileImageUrl) {
-        this.nickname = nickname;
-        this.profileImageUrl = profileImageUrl;
-    }
-
     public void updateNickname(String nickname) {
         this.nickname = nickname;
     }
@@ -75,5 +73,17 @@ public class User extends BaseEntity {
 
     public void updateNotificationEnabled(boolean notificationEnabled) {
         this.notificationEnabled = notificationEnabled;
+    }
+
+    // (provider, provider_id) 유니크 제약은 소프트 딜리트된 행에도 그대로 걸려 있어,
+    // providerId를 그대로 두면 같은 소셜 계정으로 재가입할 때 제약 위반이 난다.
+    // 탈퇴 시점에 연결을 끊어 재가입이 새 계정으로 이뤄지게 하고 소셜 식별자도 남기지 않는다.
+    // 행 자체는 촌캉스 host/멤버 참조 무결성 때문에 남기되, 닉네임/프로필 이미지 등
+    // 개인을 식별할 수 있는 값은 모두 지워서 탈퇴 의사대로 완전히 사라진 것처럼 처리한다.
+    public void withdraw() {
+        this.providerId = WITHDRAWN_PROVIDER_ID_PREFIX + this.id + "_" + this.providerId;
+        this.nickname = WITHDRAWN_NICKNAME;
+        this.profileImageUrl = null;
+        delete();
     }
 }

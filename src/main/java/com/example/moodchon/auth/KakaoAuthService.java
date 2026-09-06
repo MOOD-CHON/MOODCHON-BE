@@ -1,7 +1,6 @@
 package com.example.moodchon.auth;
 
 import com.example.moodchon.auth.dto.TokenResponse;
-import com.example.moodchon.auth.jwt.JwtProvider;
 import com.example.moodchon.domain.user.entity.User;
 import com.example.moodchon.global.exception.CustomException;
 import com.example.moodchon.global.exception.ErrorCode;
@@ -20,7 +19,7 @@ import org.springframework.web.client.RestClientException;
 public class KakaoAuthService {
 
     private final UserProvisioningService userProvisioningService;
-    private final JwtProvider jwtProvider;
+    private final TokenIssuer tokenIssuer;
     private final RestClient restClient = RestClient.create();
 
     public TokenResponse login(String accessToken) {
@@ -28,9 +27,7 @@ public class KakaoAuthService {
         OAuthAttributes oAuthAttributes = OAuthAttributes.ofKakao(attributes);
         User user = userProvisioningService.saveOrUpdate(oAuthAttributes);
 
-        String jwtAccessToken = jwtProvider.createAccessToken(user.getId(), user.getRole().name());
-        String jwtRefreshToken = jwtProvider.createRefreshToken(user.getId());
-        return new TokenResponse(jwtAccessToken, jwtRefreshToken);
+        return tokenIssuer.issue(user);
     }
 
     @SuppressWarnings("unchecked")

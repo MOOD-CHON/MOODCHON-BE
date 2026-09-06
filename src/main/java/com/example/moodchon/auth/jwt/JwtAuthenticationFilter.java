@@ -32,7 +32,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                      FilterChain filterChain) throws ServletException, IOException {
         String token = resolveToken(request);
 
-        if (token != null && jwtProvider.isValid(token)) {
+        // 리프레시 토큰은 재발급(/api/auth/refresh)에서만 쓰이며 일반 API 인증에는 사용할 수 없다.
+        if (token != null && jwtProvider.isValid(token) && jwtProvider.isAccessToken(token)) {
             SecurityContextHolder.getContext().setAuthentication(getAuthentication(token));
         }
 

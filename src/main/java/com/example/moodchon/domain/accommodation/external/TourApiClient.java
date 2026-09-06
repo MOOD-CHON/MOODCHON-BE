@@ -142,6 +142,43 @@ public class TourApiClient {
         );
     }
 
+    // detailIntro2 - 숙소(contentTypeId=32) 전용 이용안내·편의시설 원본 필드.
+    public TourApiLodgingIntroFields fetchLodgingIntro(String contentId) {
+        try {
+            String rawResponseBody = restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("https")
+                            .host("apis.data.go.kr")
+                            .path("/B551011/KorService2/detailIntro2")
+                            .queryParam("serviceKey", properties.serviceKey())
+                            .queryParam("MobileOS", "ETC")
+                            .queryParam("MobileApp", "moodchon")
+                            .queryParam("_type", "json")
+                            .queryParam("contentId", contentId)
+                            .queryParam("contentTypeId", detailContentTypeId(PlaceCategory.ACCOMMODATION))
+                            .build())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .body(String.class);
+
+            JsonNode root = jsonMapper.readTree(rawResponseBody);
+            JsonNode item = firstItem(root.path("response").path("body").path("items").path("item"));
+            return toLodgingIntroFields(item);
+        } catch (RestClientException | JacksonException e) {
+            throw new CustomException(ErrorCode.TOUR_API_REQUEST_FAILED);
+        }
+    }
+
+    private TourApiLodgingIntroFields toLodgingIntroFields(JsonNode item) {
+        return new TourApiLodgingIntroFields(
+                item.path("checkintime").asString(""),
+                item.path("checkouttime").asString(""),
+                item.path("chkcooking").asString(""),
+                item.path("barbecue").asString(""),
+                item.path("accomcountlodging").asString("")
+        );
+    }
+
     public List<String> fetchImages(String contentId) {
         try {
             String rawResponseBody = restClient.get()
