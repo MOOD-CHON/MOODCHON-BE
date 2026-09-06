@@ -53,6 +53,9 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private boolean notificationEnabled = true;
 
+    // 탈퇴 시 Sign in with Apple 연결을 철회(auth/revoke)하기 위해 보관한다. 카카오/테스트 유저는 null.
+    private String appleRefreshToken;
+
     @Builder
     private User(AuthProvider provider, String providerId, String nickname, String profileImageUrl, UserRole role) {
         this.provider = provider;
@@ -73,6 +76,10 @@ public class User extends BaseEntity {
 
     public void updateNotificationEnabled(boolean notificationEnabled) {
         this.notificationEnabled = notificationEnabled;
+    }
+
+    public void updateAppleRefreshToken(String appleRefreshToken) {
+        this.appleRefreshToken = appleRefreshToken;
     }
 
     // (provider, provider_id) 유니크 제약은 소프트 딜리트된 행에도 그대로 걸려 있어,

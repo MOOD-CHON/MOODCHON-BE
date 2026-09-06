@@ -1,5 +1,6 @@
 package com.example.moodchon.domain.user.service;
 
+import com.example.moodchon.auth.AppleTokenClient;
 import com.example.moodchon.auth.KakaoUnlinkService;
 import com.example.moodchon.auth.repository.RefreshTokenRepository;
 import com.example.moodchon.domain.user.dto.request.UpdateNicknameRequest;
@@ -25,6 +26,7 @@ public class UserProfileService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final KakaoUnlinkService kakaoUnlinkService;
+    private final AppleTokenClient appleTokenClient;
 
     @Transactional(readOnly = true)
     public UserProfileResponse getMyProfile(Long userId) {
@@ -53,17 +55,24 @@ public class UserProfileService {
         User user = findUser(userId);
         AuthProvider provider = user.getProvider();
         String providerId = user.getProviderId();
+        String appleRefreshToken = user.getAppleRefreshToken();
 
         // 탈퇴 후 남은 리프레시 토큰으로 재발급되는 것을 막는다.
         refreshTokenRepository.deleteByUserId(userId);
         user.withdraw();
 
-        // 카카오 쪽 연결(동의) 해제는 부가 작업이라, 실패해도 탈퇴 자체는 완료시킨다.
+        // 소셜 쪽 연결 해제는 부가 작업이라, 실패해도 탈퇴 자체는 완료시킨다.
         if (provider == AuthProvider.KAKAO) {
             try {
                 kakaoUnlinkService.unlink(providerId);
             } catch (Exception e) {
                 log.warn("카카오 연결 해제 실패: userId={}", userId, e);
+            }
+        } else if (provider == AuthProvider.APPLE && appleRefreshToken != null) {
+            try {
+                appleTokenClient.revoke(appleRefreshToken);
+            } catch (Exception e) {
+                log.warn("애플 연결 해제 실패: userId={}", userId, e);
             }
         }
     }
