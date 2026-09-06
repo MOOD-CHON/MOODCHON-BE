@@ -27,6 +27,8 @@ import org.hibernate.annotations.SQLRestriction;
 @SQLRestriction("deleted_at IS NULL")
 public class User extends BaseEntity {
 
+    private static final String WITHDRAWN_PROVIDER_ID_PREFIX = "withdrawn_";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -75,5 +77,13 @@ public class User extends BaseEntity {
 
     public void updateNotificationEnabled(boolean notificationEnabled) {
         this.notificationEnabled = notificationEnabled;
+    }
+
+    // (provider, provider_id) 유니크 제약은 소프트 딜리트된 행에도 그대로 걸려 있어,
+    // providerId를 그대로 두면 같은 소셜 계정으로 재가입할 때 제약 위반이 난다.
+    // 탈퇴 시점에 연결을 끊어 재가입이 새 계정으로 이뤄지게 하고 소셜 식별자도 남기지 않는다.
+    public void withdraw() {
+        this.providerId = WITHDRAWN_PROVIDER_ID_PREFIX + this.id + "_" + this.providerId;
+        delete();
     }
 }

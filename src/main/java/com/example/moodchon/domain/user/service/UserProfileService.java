@@ -1,5 +1,6 @@
 package com.example.moodchon.domain.user.service;
 
+import com.example.moodchon.auth.repository.RefreshTokenRepository;
 import com.example.moodchon.domain.user.dto.request.UpdateNicknameRequest;
 import com.example.moodchon.domain.user.dto.request.UpdateNotificationPreferenceRequest;
 import com.example.moodchon.domain.user.dto.request.UpdateProfileImageRequest;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserProfileService {
 
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Transactional(readOnly = true)
     public UserProfileResponse getMyProfile(Long userId) {
@@ -44,7 +46,10 @@ public class UserProfileService {
 
     public void withdraw(Long userId) {
         User user = findUser(userId);
-        userRepository.delete(user);
+
+        // 탈퇴 후 남은 리프레시 토큰으로 재발급되는 것을 막는다.
+        refreshTokenRepository.deleteByUserId(userId);
+        user.withdraw();
     }
 
     private User findUser(Long userId) {
