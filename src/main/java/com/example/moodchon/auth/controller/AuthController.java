@@ -2,10 +2,12 @@ package com.example.moodchon.auth.controller;
 
 import com.example.moodchon.auth.AppleAuthService;
 import com.example.moodchon.auth.KakaoAuthService;
+import com.example.moodchon.auth.LogoutService;
 import com.example.moodchon.auth.TestLoginService;
 import com.example.moodchon.auth.TokenRefreshService;
 import com.example.moodchon.auth.dto.AppleLoginRequest;
 import com.example.moodchon.auth.dto.KakaoLoginRequest;
+import com.example.moodchon.auth.dto.LogoutRequest;
 import com.example.moodchon.auth.dto.TestLoginRequest;
 import com.example.moodchon.auth.dto.TokenRefreshRequest;
 import com.example.moodchon.auth.dto.TokenResponse;
@@ -26,6 +28,7 @@ public class AuthController {
     private final AppleAuthService appleAuthService;
     private final TokenRefreshService tokenRefreshService;
     private final TestLoginService testLoginService;
+    private final LogoutService logoutService;
 
     @PostMapping("/kakao")
     public ApiResponse<TokenResponse> loginWithKakao(@Valid @RequestBody KakaoLoginRequest request) {
@@ -40,6 +43,12 @@ public class AuthController {
     @PostMapping("/refresh")
     public ApiResponse<TokenResponse> refresh(@Valid @RequestBody TokenRefreshRequest request) {
         return ApiResponse.success(tokenRefreshService.refresh(request.refreshToken()));
+    }
+
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(@Valid @RequestBody LogoutRequest request) {
+        logoutService.logout(request.refreshToken());
+        return ApiResponse.success();
     }
 
     // 소셜 SDK 없이 Swagger에서 API를 호출하기 위한 테스트용 로그인. 운영 배포 전 제거 필요.

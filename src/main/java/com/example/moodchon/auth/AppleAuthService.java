@@ -1,7 +1,6 @@
 package com.example.moodchon.auth;
 
 import com.example.moodchon.auth.dto.TokenResponse;
-import com.example.moodchon.auth.jwt.JwtProvider;
 import com.example.moodchon.domain.user.entity.User;
 import com.example.moodchon.global.exception.CustomException;
 import com.example.moodchon.global.exception.ErrorCode;
@@ -22,15 +21,15 @@ public class AppleAuthService {
     private static final String APPLE_JWK_SET_URI = "https://appleid.apple.com/auth/keys";
 
     private final UserProvisioningService userProvisioningService;
-    private final JwtProvider jwtProvider;
+    private final TokenIssuer tokenIssuer;
     private final String bundleId;
     private final JwtDecoder appleJwtDecoder;
 
     public AppleAuthService(UserProvisioningService userProvisioningService,
-                             JwtProvider jwtProvider,
+                             TokenIssuer tokenIssuer,
                              @Value("${apple.bundle-id}") String bundleId) {
         this.userProvisioningService = userProvisioningService;
-        this.jwtProvider = jwtProvider;
+        this.tokenIssuer = tokenIssuer;
         this.bundleId = bundleId;
         this.appleJwtDecoder = NimbusJwtDecoder.withJwkSetUri(APPLE_JWK_SET_URI).build();
     }
@@ -41,9 +40,7 @@ public class AppleAuthService {
         OAuthAttributes attributes = OAuthAttributes.ofApple(jwt.getClaims());
         User user = userProvisioningService.saveOrUpdate(attributes);
 
-        String jwtAccessToken = jwtProvider.createAccessToken(user.getId(), user.getRole().name());
-        String jwtRefreshToken = jwtProvider.createRefreshToken(user.getId());
-        return new TokenResponse(jwtAccessToken, jwtRefreshToken);
+        return tokenIssuer.issue(user);
     }
 
     private Jwt decodeAndVerify(String identityToken) {

@@ -1,7 +1,6 @@
 package com.example.moodchon.auth;
 
 import com.example.moodchon.auth.dto.TokenResponse;
-import com.example.moodchon.auth.jwt.JwtProvider;
 import com.example.moodchon.domain.user.entity.AuthProvider;
 import com.example.moodchon.domain.user.entity.User;
 import com.example.moodchon.domain.user.entity.UserRole;
@@ -20,7 +19,7 @@ public class TestLoginService {
     private static final String DEFAULT_TEST_ID = "1";
 
     private final UserRepository userRepository;
-    private final JwtProvider jwtProvider;
+    private final TokenIssuer tokenIssuer;
 
     @Transactional
     public TokenResponse login(String testId, String nickname) {
@@ -35,9 +34,6 @@ public class TestLoginService {
                         .role(UserRole.USER)
                         .build()));
 
-        return new TokenResponse(
-                jwtProvider.createAccessToken(user.getId(), user.getRole().name()),
-                jwtProvider.createRefreshToken(user.getId())
-        );
+        return tokenIssuer.issue(user);
     }
 }
