@@ -2,9 +2,11 @@ package com.example.moodchon.auth.controller;
 
 import com.example.moodchon.auth.AppleAuthService;
 import com.example.moodchon.auth.KakaoAuthService;
+import com.example.moodchon.auth.TestLoginService;
 import com.example.moodchon.auth.TokenRefreshService;
 import com.example.moodchon.auth.dto.AppleLoginRequest;
 import com.example.moodchon.auth.dto.KakaoLoginRequest;
+import com.example.moodchon.auth.dto.TestLoginRequest;
 import com.example.moodchon.auth.dto.TokenRefreshRequest;
 import com.example.moodchon.auth.dto.TokenResponse;
 import com.example.moodchon.global.common.ApiResponse;
@@ -23,6 +25,7 @@ public class AuthController {
     private final KakaoAuthService kakaoAuthService;
     private final AppleAuthService appleAuthService;
     private final TokenRefreshService tokenRefreshService;
+    private final TestLoginService testLoginService;
 
     @PostMapping("/kakao")
     public ApiResponse<TokenResponse> loginWithKakao(@Valid @RequestBody KakaoLoginRequest request) {
@@ -37,5 +40,13 @@ public class AuthController {
     @PostMapping("/refresh")
     public ApiResponse<TokenResponse> refresh(@Valid @RequestBody TokenRefreshRequest request) {
         return ApiResponse.success(tokenRefreshService.refresh(request.refreshToken()));
+    }
+
+    // 소셜 SDK 없이 Swagger에서 API를 호출하기 위한 테스트용 로그인. 운영 배포 전 제거 필요.
+    @PostMapping("/test-login")
+    public ApiResponse<TokenResponse> testLogin(@RequestBody(required = false) TestLoginRequest request) {
+        String testId = request != null ? request.testId() : null;
+        String nickname = request != null ? request.nickname() : null;
+        return ApiResponse.success(testLoginService.login(testId, nickname));
     }
 }
