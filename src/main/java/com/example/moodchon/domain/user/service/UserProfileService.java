@@ -1,18 +1,22 @@
 package com.example.moodchon.domain.user.service;
 
+import com.example.moodchon.auth.KakaoUnlinkService;
 import com.example.moodchon.auth.repository.RefreshTokenRepository;
 import com.example.moodchon.domain.user.dto.request.UpdateNicknameRequest;
 import com.example.moodchon.domain.user.dto.request.UpdateNotificationPreferenceRequest;
 import com.example.moodchon.domain.user.dto.request.UpdateProfileImageRequest;
 import com.example.moodchon.domain.user.dto.response.UserProfileResponse;
+import com.example.moodchon.domain.user.entity.AuthProvider;
 import com.example.moodchon.domain.user.entity.User;
 import com.example.moodchon.domain.user.repository.UserRepository;
 import com.example.moodchon.global.exception.CustomException;
 import com.example.moodchon.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -20,6 +24,7 @@ public class UserProfileService {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final KakaoUnlinkService kakaoUnlinkService;
 
     @Transactional(readOnly = true)
     public UserProfileResponse getMyProfile(Long userId) {
@@ -46,10 +51,21 @@ public class UserProfileService {
 
     public void withdraw(Long userId) {
         User user = findUser(userId);
+        AuthProvider provider = user.getProvider();
+        String providerId = user.getProviderId();
 
         // 탈퇴 후 남은 리프레시 토큰으로 재발급되는 것을 막는다.
         refreshTokenRepository.deleteByUserId(userId);
         user.withdraw();
+
+        // 카카오 쪽 연결(동의) 해제는 부가 작업이라, 실패해도 탈퇴 자체는 완료시킨다.
+        if (provider == AuthProvider.KAKAO) {
+            try {
+                kakaoUnlinkService.unlink(providerId);
+            } catch (Exception e) {
+                log.warn("카카오 연결 해제 실패: userId={}", userId, e);
+            }
+        }
     }
 
     private User findUser(Long userId) {
