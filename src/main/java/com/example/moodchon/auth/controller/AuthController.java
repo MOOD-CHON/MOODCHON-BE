@@ -2,8 +2,10 @@ package com.example.moodchon.auth.controller;
 
 import com.example.moodchon.auth.AppleAuthService;
 import com.example.moodchon.auth.KakaoAuthService;
+import com.example.moodchon.auth.TokenRefreshService;
 import com.example.moodchon.auth.dto.AppleLoginRequest;
 import com.example.moodchon.auth.dto.KakaoLoginRequest;
+import com.example.moodchon.auth.dto.TokenRefreshRequest;
 import com.example.moodchon.auth.dto.TokenResponse;
 import com.example.moodchon.global.common.ApiResponse;
 import jakarta.validation.Valid;
@@ -20,6 +22,7 @@ public class AuthController {
 
     private final KakaoAuthService kakaoAuthService;
     private final AppleAuthService appleAuthService;
+    private final TokenRefreshService tokenRefreshService;
 
     @PostMapping("/kakao")
     public ApiResponse<TokenResponse> loginWithKakao(@Valid @RequestBody KakaoLoginRequest request) {
@@ -29,5 +32,10 @@ public class AuthController {
     @PostMapping("/apple")
     public ApiResponse<TokenResponse> loginWithApple(@Valid @RequestBody AppleLoginRequest request) {
         return ApiResponse.success(appleAuthService.login(request.identityToken()));
+    }
+
+    @PostMapping("/refresh")
+    public ApiResponse<TokenResponse> refresh(@Valid @RequestBody TokenRefreshRequest request) {
+        return ApiResponse.success(tokenRefreshService.refresh(request.refreshToken()));
     }
 }
