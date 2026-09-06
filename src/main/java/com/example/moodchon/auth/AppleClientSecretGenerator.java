@@ -22,7 +22,8 @@ public class AppleClientSecretGenerator {
     private final String teamId;
     private final String keyId;
     private final String bundleId;
-    private final PrivateKey privateKey;
+    private final String privateKeyBase64;
+    private volatile PrivateKey privateKey;
 
     public AppleClientSecretGenerator(
             @Value("${apple.team-id}") String teamId,
@@ -32,7 +33,7 @@ public class AppleClientSecretGenerator {
         this.teamId = teamId;
         this.keyId = keyId;
         this.bundleId = bundleId;
-        this.privateKey = parsePrivateKey(privateKeyBase64);
+        this.privateKeyBase64 = privateKeyBase64;
     }
 
     public String generate() {
@@ -45,8 +46,17 @@ public class AppleClientSecretGenerator {
                 .subject(bundleId)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(5, ChronoUnit.MINUTES)))
-                .signWith(privateKey)
+                .signWith(privateKey())
                 .compact();
+    }
+
+    // 키 파싱을 빈 생성 시점이 아니라 최초 사용 시점으로 미룬다. CI 테스트 등 애플 키가
+    // 설정되지 않은 환경에서도 애플 로그인을 실제로 쓰지 않는 한 앱/컨텍스트가 정상 기동해야 한다.
+    private PrivateKey privateKey() {
+        if (privateKey == null) {
+            privateKey = parsePrivateKey(privateKeyBase64);
+        }
+        return privateKey;
     }
 
     private static PrivateKey parsePrivateKey(String privateKeyBase64) {
