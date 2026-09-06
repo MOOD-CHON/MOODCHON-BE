@@ -31,5 +31,11 @@ openai:
 tour-api:
   service-key: ${TOUR_API_SERVICE_KEY:}
 
+kakao:
+  admin-key: ${KAKAO_ADMIN_KEY:}
+
 apple:
   bundle-id: ${APPLE_BUNDLE_ID:com.moodchon.app}
+  team-id: ${APPLE_TEAM_ID:}
+  key-id: ${APPLE_KEY_ID:}
+  private-key-base64: ${APPLE_PRIVATE_KEY_BASE64:}

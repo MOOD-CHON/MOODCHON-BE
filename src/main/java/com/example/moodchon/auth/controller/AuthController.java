@@ -37,7 +37,7 @@ public class AuthController {
 
     @PostMapping("/apple")
     public ApiResponse<TokenResponse> loginWithApple(@Valid @RequestBody AppleLoginRequest request) {
-        return ApiResponse.success(appleAuthService.login(request.identityToken()));
+        return ApiResponse.success(appleAuthService.login(request.identityToken(), request.authorizationCode()));
     }
 
     @PostMapping("/refresh")
