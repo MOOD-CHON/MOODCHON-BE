@@ -1,5 +1,6 @@
 package com.example.moodchon.domain.accommodation.service;
 
+import com.example.moodchon.domain.accommodation.ai.AccommodationCandidate;
 import com.example.moodchon.domain.accommodation.ai.AccommodationMatchContext;
 import com.example.moodchon.domain.accommodation.ai.AccommodationMatchResult;
 import com.example.moodchon.domain.accommodation.ai.AccommodationMatcher;
@@ -69,8 +70,18 @@ public class RecommendedAccommodationGenerationService {
             return;
         }
 
+        List<AccommodationCandidate> matchCandidates = candidates.stream()
+                .map(place -> new AccommodationCandidate(
+                        place, tourApiClient.fetchLodgingIntro(place.getExternalContentId())))
+                .toList();
+
         AccommodationMatchResult result = accommodationMatcher.match(
-                new AccommodationMatchContext(chonkang.getMoodName(), chonkang.getMoodDescription(), candidates));
+                new AccommodationMatchContext(
+                        chonkang.getMoodName(),
+                        chonkang.getMoodDescription(),
+                        chonkang.getPlannedMemberCount(),
+                        chonkang.getAccommodationConditions(),
+                        matchCandidates));
 
         saveRanked(chonkang, candidates, result);
     }
