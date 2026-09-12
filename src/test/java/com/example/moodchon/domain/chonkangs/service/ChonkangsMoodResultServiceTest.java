@@ -10,12 +10,13 @@ import com.example.moodchon.domain.chonkangs.entity.Region;
 import com.example.moodchon.domain.chonkangs.entity.TravelMethod;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMemberRepository;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMoodSelectionRepository;
-import com.example.moodchon.domain.mood.entity.AccommodationType;
-import com.example.moodchon.domain.mood.entity.MoodCard;
 import com.example.moodchon.domain.mood.entity.MoodTag;
 import com.example.moodchon.domain.mood.entity.MoodTagCategory;
 import com.example.moodchon.domain.mood.entity.MoodType;
 import com.example.moodchon.domain.mood.repository.MoodTypeRepository;
+import com.example.moodchon.domain.place.entity.Place;
+import com.example.moodchon.domain.place.entity.PlaceCategory;
+import com.example.moodchon.domain.place.entity.Post;
 import com.example.moodchon.domain.user.entity.AuthProvider;
 import com.example.moodchon.domain.user.entity.User;
 import com.example.moodchon.domain.user.entity.UserRole;
@@ -50,10 +51,10 @@ class ChonkangsMoodResultServiceTest {
     void doesNotConfirmMoodWhenSomeMembersHaveNotSubmitted() {
         Chonkangs chonkang = chonkang(1L);
         User submitted = user(1L);
-        MoodCard moodCard = moodCard(1L, moodTag(1L, "고즈넉한"));
+        Post post = post(1L, moodTag(1L, "고즈넉한"));
 
         when(chonkangsMoodSelectionRepository.findAllByChonkangId(1L))
-                .thenReturn(List.of(moodSelection(chonkang, submitted, moodCard)));
+                .thenReturn(List.of(moodSelection(chonkang, submitted, post)));
         when(chonkangsMemberRepository.countByChonkangId(1L)).thenReturn(3L);
 
         chonkangsMoodResultService.confirmIfAllMembersSubmitted(chonkang);
@@ -70,15 +71,15 @@ class ChonkangsMoodResultServiceTest {
         MoodTag quiet = moodTag(1L, "조용한");
         MoodTag alley = moodTag(2L, "골목길");
         MoodTag lively = moodTag(3L, "활기있는");
-        MoodCard cardWithQuietAndAlley = moodCard(1L, quiet, alley);
-        MoodCard cardWithLively = moodCard(2L, lively);
+        Post postWithQuietAndAlley = post(1L, quiet, alley);
+        Post postWithLively = post(2L, lively);
 
         MoodType quietAlleyType = moodType(1L, "고즈넉한 쉼표 무드", "설명1", quiet, alley);
         MoodType livelyType = moodType(2L, "로컬 체험 무드", "설명2", lively);
 
         when(chonkangsMoodSelectionRepository.findAllByChonkangId(1L)).thenReturn(List.of(
-                moodSelection(chonkang, userA, cardWithQuietAndAlley),
-                moodSelection(chonkang, userB, cardWithLively)
+                moodSelection(chonkang, userA, postWithQuietAndAlley),
+                moodSelection(chonkang, userB, postWithLively)
         ));
         when(chonkangsMemberRepository.countByChonkangId(1L)).thenReturn(2L);
         when(moodTypeRepository.findAllWithCoreTags()).thenReturn(List.of(quietAlleyType, livelyType));
@@ -96,13 +97,13 @@ class ChonkangsMoodResultServiceTest {
         Chonkangs chonkang = chonkang(1L);
         User user = user(1L);
         MoodTag quiet = moodTag(1L, "조용한");
-        MoodCard card = moodCard(1L, quiet);
+        Post post = post(1L, quiet);
 
         MoodType lowerIdType = moodType(1L, "무드A", "설명A", quiet);
         MoodType higherIdType = moodType(2L, "무드B", "설명B", quiet);
 
         when(chonkangsMoodSelectionRepository.findAllByChonkangId(1L))
-                .thenReturn(List.of(moodSelection(chonkang, user, card)));
+                .thenReturn(List.of(moodSelection(chonkang, user, post)));
         when(chonkangsMemberRepository.countByChonkangId(1L)).thenReturn(1L);
         when(moodTypeRepository.findAllWithCoreTags()).thenReturn(List.of(higherIdType, lowerIdType));
 
@@ -145,20 +146,25 @@ class ChonkangsMoodResultServiceTest {
         return tag;
     }
 
-    private MoodCard moodCard(Long id, MoodTag... tags) {
-        MoodCard card = MoodCard.builder()
-                .imageUrl("https://example.com/card.png")
-                .accommodationType(accommodationType(id))
+    // 무드 카드는 탐색 탭 게시물이다.
+    private Post post(Long id, MoodTag... tags) {
+        Post post = Post.builder()
+                .place(place(id))
+                .imageUrl("https://example.com/post.png")
                 .tags(Set.of(tags))
                 .build();
-        ReflectionTestUtils.setField(card, "id", id);
-        return card;
+        ReflectionTestUtils.setField(post, "id", id);
+        return post;
     }
 
-    private AccommodationType accommodationType(Long id) {
-        AccommodationType type = AccommodationType.builder().name("펜션" + id).build();
-        ReflectionTestUtils.setField(type, "id", id);
-        return type;
+    private Place place(Long id) {
+        Place place = Place.builder()
+                .externalContentId("content-" + id)
+                .name("장소" + id)
+                .category(PlaceCategory.ACCOMMODATION)
+                .build();
+        ReflectionTestUtils.setField(place, "id", id);
+        return place;
     }
 
     private MoodType moodType(Long id, String name, String description, MoodTag... coreTags) {
@@ -171,11 +177,11 @@ class ChonkangsMoodResultServiceTest {
         return moodType;
     }
 
-    private ChonkangsMoodSelection moodSelection(Chonkangs chonkang, User user, MoodCard moodCard) {
+    private ChonkangsMoodSelection moodSelection(Chonkangs chonkang, User user, Post post) {
         return ChonkangsMoodSelection.builder()
                 .chonkang(chonkang)
                 .user(user)
-                .moodCard(moodCard)
+                .post(post)
                 .build();
     }
 }
