@@ -7,6 +7,7 @@ import com.example.moodchon.domain.accommodation.ai.AccommodationMatcher;
 import com.example.moodchon.domain.accommodation.entity.RecommendedAccommodation;
 import com.example.moodchon.domain.accommodation.external.TourApiClient;
 import com.example.moodchon.domain.accommodation.external.TourApiPlace;
+import com.example.moodchon.domain.accommodation.external.TourApiLodgingIntroFields;
 import com.example.moodchon.domain.accommodation.repository.AccommodationVoteRepository;
 import com.example.moodchon.domain.accommodation.repository.RecommendedAccommodationRepository;
 import com.example.moodchon.domain.chonkangs.entity.Chonkangs;
@@ -83,28 +84,34 @@ public class RecommendedAccommodationGenerationService {
                         chonkang.getAccommodationConditions(),
                         matchCandidates));
 
-        saveRanked(chonkang, candidates, result);
+        saveRanked(chonkang, matchCandidates, result);
     }
 
-    private void saveRanked(Chonkangs chonkang, List<Place> candidates, AccommodationMatchResult result) {
-        Map<Long, Place> placeById = candidates.stream()
-                .collect(Collectors.toMap(Place::getId, Function.identity()));
+    private void saveRanked(Chonkangs chonkang, List<AccommodationCandidate> matchCandidates,
+                             AccommodationMatchResult result) {
+        Map<Long, AccommodationCandidate> candidateByPlaceId = matchCandidates.stream()
+                .collect(Collectors.toMap(candidate -> candidate.place().getId(), Function.identity()));
 
         List<AccommodationMatchResult.MatchedAccommodation> ranked = result.accommodations().stream()
-                .filter(matched -> placeById.containsKey(matched.placeId()))
+                .filter(matched -> candidateByPlaceId.containsKey(matched.placeId()))
                 .sorted(Comparator.comparingInt(AccommodationMatchResult.MatchedAccommodation::matchScore).reversed())
                 .toList();
 
         List<RecommendedAccommodation> entities = new ArrayList<>();
         int rank = 0;
         for (AccommodationMatchResult.MatchedAccommodation matched : ranked) {
+            AccommodationCandidate candidate = candidateByPlaceId.get(matched.placeId());
+            TourApiLodgingIntroFields intro = candidate.lodgingIntro();
             entities.add(RecommendedAccommodation.builder()
                     .chonkang(chonkang)
-                    .place(placeById.get(matched.placeId()))
+                    .place(candidate.place())
                     .matchScore(clampScore(matched.matchScore()))
                     .rank(rank++)
                     .tags(matched.tags())
                     .highlights(matched.highlights())
+                    .barbecueAvailable(parseFlag(intro.barbecue()))
+                    .cookingAvailable(parseAvailability(intro.chkCooking()))
+                    .petFriendly(parsePetFriendly(intro.petAccompanyType()))
                     .build());
         }
 
@@ -113,5 +120,36 @@ public class RecommendedAccommodationGenerationService {
 
     private int clampScore(int score) {
         return Math.max(0, Math.min(100, score));
+    }
+
+    // barbecue는 TourAPI가 "1"/"0"으로 내려주는 플래그 필드다.
+    private Boolean parseFlag(String rawValue) {
+        if ("1".equals(rawValue)) {
+            return true;
+        }
+        if ("0".equals(rawValue)) {
+            return false;
+        }
+        return null;
+    }
+
+    // chkCooking은 "가능"/"불가능"/빈값처럼 자유 텍스트로 내려온다.
+    private Boolean parseAvailability(String rawValue) {
+        if (rawValue == null) {
+            return null;
+        }
+        if (rawValue.contains("불가능")) {
+            return false;
+        }
+        if (rawValue.contains("가능")) {
+            return true;
+        }
+        return null;
+    }
+
+    // detailPetTour2는 등록된 숙소만 결과를 주기 때문에 값이 있으면 동반 가능으로 보고,
+    // 없으면 "명시적으로 불가능"이 아니라 "정보없음"으로 다룬다.
+    private Boolean parsePetFriendly(String petAccompanyType) {
+        return (petAccompanyType == null || petAccompanyType.isBlank()) ? null : true;
     }
 }

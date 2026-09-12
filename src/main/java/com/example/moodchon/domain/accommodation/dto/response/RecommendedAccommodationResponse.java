@@ -15,6 +15,9 @@ public record RecommendedAccommodationResponse(
         int rank,
         List<String> tags,
         List<String> highlights,
+        Boolean barbecueAvailable,
+        Boolean cookingAvailable,
+        Boolean petFriendly,
         long voteCount,
         boolean votedByMe
 ) {
@@ -33,6 +36,9 @@ public record RecommendedAccommodationResponse(
                 recommendedAccommodation.getRank(),
                 recommendedAccommodation.getTags(),
                 recommendedAccommodation.getHighlights(),
+                recommendedAccommodation.getBarbecueAvailable(),
+                recommendedAccommodation.getCookingAvailable(),
+                recommendedAccommodation.getPetFriendly(),
                 voteCount,
                 votedByMe
         );
