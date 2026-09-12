@@ -2,6 +2,7 @@ package com.example.moodchon.domain.accommodation.dto.response;
 
 import com.example.moodchon.domain.accommodation.entity.RecommendedAccommodation;
 import com.example.moodchon.domain.place.entity.Place;
+import java.util.ArrayList;
 import java.util.List;
 
 public record RecommendedAccommodationResponse(
@@ -36,8 +37,8 @@ public record RecommendedAccommodationResponse(
                 images,
                 recommendedAccommodation.getMatchScore(),
                 recommendedAccommodation.getRank(),
-                recommendedAccommodation.getTags(),
-                recommendedAccommodation.getHighlights(),
+                new ArrayList<>(recommendedAccommodation.getTags()),
+                new ArrayList<>(recommendedAccommodation.getHighlights()),
                 recommendedAccommodation.getBarbecueAvailable(),
                 recommendedAccommodation.getCookingAvailable(),
                 recommendedAccommodation.getPetFriendly(),
