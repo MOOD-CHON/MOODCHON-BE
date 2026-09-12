@@ -32,7 +32,7 @@ public record RecommendedAccommodationResponse(
                 place.getId(),
                 place.getName(),
                 place.getAddress(),
-                place.getThumbnailUrl(),
+                resolveThumbnailUrl(place.getThumbnailUrl(), images),
                 place.getDescription(),
                 images,
                 recommendedAccommodation.getMatchScore(),
@@ -46,5 +46,13 @@ public record RecommendedAccommodationResponse(
                 votedByMe,
                 voters
         );
+    }
+
+    // TourAPI 대표 이미지가 없는 숙소가 많아, 없으면 상세 이미지 중 첫 장으로 대체한다.
+    private static String resolveThumbnailUrl(String thumbnailUrl, List<String> images) {
+        if (thumbnailUrl != null && !thumbnailUrl.isBlank()) {
+            return thumbnailUrl;
+        }
+        return images.isEmpty() ? null : images.get(0);
     }
 }
