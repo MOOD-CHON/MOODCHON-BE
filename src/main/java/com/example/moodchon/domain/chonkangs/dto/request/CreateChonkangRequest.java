@@ -19,9 +19,9 @@ public record CreateChonkangRequest(
         @NotNull LocalDate startDate,
         @NotNull LocalDate endDate,
         @Min(1) @Max(Chonkangs.MAX_MEMBER_COUNT) int plannedMemberCount,
-        @NotNull CompanionType companionType,
-        @NotNull TravelMethod travelMethod,
-        @NotNull Region desiredRegion,
+        CompanionType companionType,
+        TravelMethod travelMethod,
+        Region desiredRegion,
         Set<AccommodationCondition> accommodationConditions,
         @NotEmpty @Size(min = 3, max = 3) Set<Long> selectedMoodCardIds
 ) {

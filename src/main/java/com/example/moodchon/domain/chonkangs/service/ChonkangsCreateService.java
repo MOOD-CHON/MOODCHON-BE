@@ -8,8 +8,8 @@ import com.example.moodchon.domain.chonkangs.entity.ChonkangsMoodSelection;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMemberRepository;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMoodSelectionRepository;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsRepository;
-import com.example.moodchon.domain.mood.entity.MoodCard;
 import com.example.moodchon.domain.mood.service.MoodCardResolver;
+import com.example.moodchon.domain.place.entity.Post;
 import com.example.moodchon.domain.user.entity.User;
 import com.example.moodchon.domain.user.repository.UserRepository;
 import com.example.moodchon.global.exception.CustomException;
@@ -34,7 +34,7 @@ public class ChonkangsCreateService {
 
     public CreateChonkangResponse create(Long hostId, CreateChonkangRequest request) {
         tripDateValidator.validate(request.startDate(), request.endDate());
-        List<MoodCard> selectedMoodCards = moodCardResolver.resolveExactlyThree(request.selectedMoodCardIds());
+        List<Post> selectedPosts = moodCardResolver.resolveExactlyThree(request.selectedMoodCardIds());
 
         User host = userRepository.findById(hostId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND));
@@ -57,11 +57,11 @@ public class ChonkangsCreateService {
                 .user(host)
                 .build());
 
-        for (MoodCard moodCard : selectedMoodCards) {
+        for (Post post : selectedPosts) {
             chonkangsMoodSelectionRepository.save(ChonkangsMoodSelection.builder()
                     .chonkang(chonkang)
                     .user(host)
-                    .moodCard(moodCard)
+                    .post(post)
                     .build());
         }
 

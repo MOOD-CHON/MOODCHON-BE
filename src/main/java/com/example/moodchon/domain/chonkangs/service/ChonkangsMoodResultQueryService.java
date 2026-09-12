@@ -41,7 +41,7 @@ public class ChonkangsMoodResultQueryService {
         List<ChonkangsMoodSelection> selections = chonkangsMoodSelectionRepository.findAllByChonkangId(chonkangId);
 
         List<String> collageImageUrls = selections.stream()
-                .map(selection -> selection.getMoodCard().getImageUrl())
+                .map(selection -> selection.getPost().getImageUrl())
                 .distinct()
                 .limit(COLLAGE_IMAGE_COUNT)
                 .toList();
@@ -56,7 +56,7 @@ public class ChonkangsMoodResultQueryService {
     private List<MoodResultDetailResponse.TagFrequency> buildTagBreakdown(List<ChonkangsMoodSelection> selections) {
         Map<String, Long> counts = new LinkedHashMap<>();
         for (ChonkangsMoodSelection selection : selections) {
-            for (MoodTag tag : selection.getMoodCard().getTags()) {
+            for (MoodTag tag : selection.getPost().getTags()) {
                 counts.merge(tag.getName(), 1L, Long::sum);
             }
         }

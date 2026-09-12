@@ -44,7 +44,7 @@ public class ChonkangsMoodResultService {
     private Map<Long, Long> countTagsByTagId(List<ChonkangsMoodSelection> selections) {
         Map<Long, Long> tagCounts = new HashMap<>();
         for (ChonkangsMoodSelection selection : selections) {
-            for (MoodTag tag : selection.getMoodCard().getTags()) {
+            for (MoodTag tag : selection.getPost().getTags()) {
                 tagCounts.merge(tag.getId(), 1L, Long::sum);
             }
         }

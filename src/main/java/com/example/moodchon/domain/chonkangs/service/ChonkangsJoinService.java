@@ -10,8 +10,8 @@ import com.example.moodchon.domain.chonkangs.entity.ChonkangsMoodSelection;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMemberRepository;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMoodSelectionRepository;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsRepository;
-import com.example.moodchon.domain.mood.entity.MoodCard;
 import com.example.moodchon.domain.mood.service.MoodCardResolver;
+import com.example.moodchon.domain.place.entity.Post;
 import com.example.moodchon.domain.recommendation.entity.RecommendedItinerary;
 import com.example.moodchon.domain.recommendation.repository.RecommendedItineraryRepository;
 import com.example.moodchon.domain.user.entity.User;
@@ -92,12 +92,12 @@ public class ChonkangsJoinService {
             if (selectedMoodCardIds == null) {
                 throw new CustomException(ErrorCode.INVALID_MOOD_SELECTION);
             }
-            List<MoodCard> selectedMoodCards = moodCardResolver.resolveExactlyThree(selectedMoodCardIds);
-            for (MoodCard moodCard : selectedMoodCards) {
+            List<Post> selectedPosts = moodCardResolver.resolveExactlyThree(selectedMoodCardIds);
+            for (Post post : selectedPosts) {
                 chonkangsMoodSelectionRepository.save(ChonkangsMoodSelection.builder()
                         .chonkang(chonkang)
                         .user(user)
-                        .moodCard(moodCard)
+                        .post(post)
                         .build());
             }
             isLastParticipant = updatedMemberCount >= chonkang.getPlannedMemberCount();
