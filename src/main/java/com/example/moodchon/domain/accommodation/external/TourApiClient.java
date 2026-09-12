@@ -29,6 +29,7 @@ public class TourApiClient {
         this.restClient = RestClient.create();
     }
 
+    // region이 null이면 지역 무관 전국 검색.
     public List<TourApiPlace> searchPlaces(Region region, PlaceCategory category, int numOfRows) {
         String rawResponseBody = requestAreaBasedList(region, TourApiCategoryCode.resolve(category), numOfRows);
         return parseItems(rawResponseBody, this::toPlace);
@@ -280,24 +281,29 @@ public class TourApiClient {
         }
     }
 
-    // searchKeyword2 - 지역 무관 숙소명 키워드 검색("직접 찾은 숙소").
+    // areaBasedList2 - region이 null이면 areaCode를 아예 안 붙인다. TourAPI에서 실제로 확인한 결과
+    // areaCode는 선택 파라미터라, 생략하면 지역 무관 전국 검색이 된다(희망 지역 미선택 시 사용).
     private String requestAreaBasedList(Region region, String contentTypeId, int numOfRows) {
         try {
             return restClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .scheme("https")
-                            .host("apis.data.go.kr")
-                            .path("/B551011/KorService2/areaBasedList2")
-                            .queryParam("serviceKey", properties.serviceKey())
-                            .queryParam("MobileOS", "ETC")
-                            .queryParam("MobileApp", "moodchon")
-                            .queryParam("_type", "json")
-                            .queryParam("arrange", "A")
-                            .queryParam("contentTypeId", contentTypeId)
-                            .queryParam("areaCode", TourApiRegionCode.resolve(region))
-                            .queryParam("numOfRows", numOfRows)
-                            .queryParam("pageNo", 1)
-                            .build())
+                    .uri(uriBuilder -> {
+                        uriBuilder
+                                .scheme("https")
+                                .host("apis.data.go.kr")
+                                .path("/B551011/KorService2/areaBasedList2")
+                                .queryParam("serviceKey", properties.serviceKey())
+                                .queryParam("MobileOS", "ETC")
+                                .queryParam("MobileApp", "moodchon")
+                                .queryParam("_type", "json")
+                                .queryParam("arrange", "A")
+                                .queryParam("contentTypeId", contentTypeId)
+                                .queryParam("numOfRows", numOfRows)
+                                .queryParam("pageNo", 1);
+                        if (region != null) {
+                            uriBuilder.queryParam("areaCode", TourApiRegionCode.resolve(region));
+                        }
+                        return uriBuilder.build();
+                    })
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .body(String.class);

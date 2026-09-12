@@ -43,10 +43,9 @@ public class ChonkangsMoodResultService {
         MoodType moodType = resolveBestMoodType(tagCounts);
         chonkang.confirmMood(moodType.getName(), moodType.getDescription());
 
-        // 희망 지역을 안 골랐으면(선택 항목이라 null일 수 있음) 추천을 만들 수 없어 건너뛴다.
-        if (chonkang.getDesiredRegion() != null) {
-            recommendedAccommodationGenerationService.generate(chonkang.getId(), userId);
-        }
+        // 희망 지역이 없으면(선택 항목이라 null일 수 있음) TourAPI 검색이 지역 무관 전국
+        // 검색으로 자동 전환되므로, 지역 여부와 상관없이 항상 생성한다.
+        recommendedAccommodationGenerationService.generate(chonkang.getId(), userId);
     }
 
     private Map<Long, Long> countTagsByTagId(List<ChonkangsMoodSelection> selections) {
