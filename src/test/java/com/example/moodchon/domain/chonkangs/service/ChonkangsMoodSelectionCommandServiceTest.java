@@ -12,9 +12,10 @@ import com.example.moodchon.domain.chonkangs.entity.Region;
 import com.example.moodchon.domain.chonkangs.entity.TravelMethod;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMoodSelectionRepository;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsRepository;
-import com.example.moodchon.domain.mood.entity.AccommodationType;
-import com.example.moodchon.domain.mood.entity.MoodCard;
 import com.example.moodchon.domain.mood.service.MoodCardResolver;
+import com.example.moodchon.domain.place.entity.Place;
+import com.example.moodchon.domain.place.entity.PlaceCategory;
+import com.example.moodchon.domain.place.entity.Post;
 import com.example.moodchon.domain.user.entity.AuthProvider;
 import com.example.moodchon.domain.user.entity.User;
 import com.example.moodchon.domain.user.entity.UserRole;
@@ -25,6 +26,7 @@ import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -61,20 +63,25 @@ class ChonkangsMoodSelectionCommandServiceTest {
         Long userId = 10L;
         Chonkangs chonkang = chonkang(chonkangId);
         User user = user(userId);
-        List<MoodCard> moodCards = List.of(moodCard(1L), moodCard(2L), moodCard(3L));
+        List<Post> selectedPosts = List.of(post(1L), post(2L), post(3L));
         Set<Long> selectedMoodCardIds = Set.of(1L, 2L, 3L);
 
         when(chonkangsRepository.findById(chonkangId)).thenReturn(java.util.Optional.of(chonkang));
         when(userRepository.findById(userId)).thenReturn(java.util.Optional.of(user));
-        when(moodCardResolver.resolveExactlyThree(anySet())).thenReturn(moodCards);
+        when(moodCardResolver.resolveExactlyThree(anySet())).thenReturn(selectedPosts);
 
         chonkangsMoodSelectionCommandService.submit(chonkangId, userId,
                 new SubmitMoodSelectionRequest(selectedMoodCardIds));
 
         verify(chonkangsAccessValidator).validateMember(chonkangId, userId);
-        verify(chonkangsMoodSelectionRepository).deleteAllByChonkangIdAndUserId(chonkangId, userId);
         verify(chonkangsMoodSelectionRepository, org.mockito.Mockito.times(3)).save(any());
         verify(chonkangsMoodResultService).confirmIfAllMembersSubmitted(chonkang);
+
+        // 삭제를 flush 로 먼저 반영해야 같은 사진을 다시 고른 재제출이 유니크 제약에 걸리지 않는다.
+        InOrder inOrder = org.mockito.Mockito.inOrder(chonkangsMoodSelectionRepository);
+        inOrder.verify(chonkangsMoodSelectionRepository).deleteAllByChonkangIdAndUserId(chonkangId, userId);
+        inOrder.verify(chonkangsMoodSelectionRepository).flush();
+        inOrder.verify(chonkangsMoodSelectionRepository, org.mockito.Mockito.times(3)).save(any());
     }
 
     private Chonkangs chonkang(Long id) {
@@ -105,19 +112,24 @@ class ChonkangsMoodSelectionCommandServiceTest {
         return user;
     }
 
-    private MoodCard moodCard(Long id) {
-        MoodCard card = MoodCard.builder()
-                .imageUrl("https://example.com/card.png")
-                .accommodationType(accommodationType(id))
+    // 무드 카드는 탐색 탭 게시물이다.
+    private Post post(Long id) {
+        Post post = Post.builder()
+                .place(place(id))
+                .imageUrl("https://example.com/post.png")
                 .tags(Set.of())
                 .build();
-        ReflectionTestUtils.setField(card, "id", id);
-        return card;
+        ReflectionTestUtils.setField(post, "id", id);
+        return post;
     }
 
-    private AccommodationType accommodationType(Long id) {
-        AccommodationType type = AccommodationType.builder().name("펜션" + id).build();
-        ReflectionTestUtils.setField(type, "id", id);
-        return type;
+    private Place place(Long id) {
+        Place place = Place.builder()
+                .externalContentId("content-" + id)
+                .name("장소" + id)
+                .category(PlaceCategory.ACCOMMODATION)
+                .build();
+        ReflectionTestUtils.setField(place, "id", id);
+        return place;
     }
 }
