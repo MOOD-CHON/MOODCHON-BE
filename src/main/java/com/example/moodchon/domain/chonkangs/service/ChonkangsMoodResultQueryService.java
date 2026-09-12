@@ -8,9 +8,12 @@ import com.example.moodchon.domain.chonkangs.repository.ChonkangsRepository;
 import com.example.moodchon.domain.mood.entity.MoodTag;
 import com.example.moodchon.global.exception.CustomException;
 import com.example.moodchon.global.exception.ErrorCode;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,18 +56,23 @@ public class ChonkangsMoodResultQueryService {
                 buildSummary(tagBreakdown));
     }
 
+    // 한 사람이 카드 3장을 고르기 때문에 같은 태그가 여러 카드에 걸쳐 중복될 수 있다.
+    // 프론트의 진행바가 "인원수 중 몇 명"을 전제로 하므로(totalCount=memberCount),
+    // 태그별로 카드 개수가 아니라 그 태그를 하나라도 고른 서로 다른 인원 수를 센다.
     private List<MoodResultDetailResponse.TagFrequency> buildTagBreakdown(List<ChonkangsMoodSelection> selections) {
-        Map<String, Long> counts = new LinkedHashMap<>();
+        Map<String, Set<Long>> usersByTag = new LinkedHashMap<>();
         for (ChonkangsMoodSelection selection : selections) {
+            Long userId = selection.getUser().getId();
             for (MoodTag tag : selection.getPost().getTags()) {
-                counts.merge(tag.getName(), 1L, Long::sum);
+                usersByTag.computeIfAbsent(tag.getName(), key -> new LinkedHashSet<>()).add(userId);
             }
         }
 
-        return counts.entrySet().stream()
-                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+        return usersByTag.entrySet().stream()
+                .sorted(Comparator.<Map.Entry<String, Set<Long>>>comparingInt(entry -> entry.getValue().size())
+                        .reversed())
                 .limit(TAG_BREAKDOWN_LIMIT)
-                .map(entry -> new MoodResultDetailResponse.TagFrequency(entry.getKey(), entry.getValue()))
+                .map(entry -> new MoodResultDetailResponse.TagFrequency(entry.getKey(), entry.getValue().size()))
                 .toList();
     }
 
