@@ -18,11 +18,19 @@ public record MoodCardResponse(
     public static MoodCardResponse from(Post post) {
         return new MoodCardResponse(
                 post.getId(),
-                post.getImageUrl(),
+                resolveImageUrl(post),
                 post.getPlace().getName(),
                 post.getPlace().getCategory(),
                 post.getPlace().getCategory().getLabel(),
                 post.getTags().stream().map(MoodTag::getName).toList()
         );
+    }
+
+    // 무드 카드는 안내판·실내 사진 같은 상세 이미지 대신, TourAPI가 큐레이션한
+    // 대표 이미지를 우선 보여준다. 대표 이미지가 없는 장소만 상세 이미지로 대체한다.
+    // 탐색 탭 게시물 자체(post.imageUrl)는 그대로 두고 여기서 보여줄 값만 바꾼다.
+    private static String resolveImageUrl(Post post) {
+        String thumbnailUrl = post.getPlace().getThumbnailUrl();
+        return (thumbnailUrl == null || thumbnailUrl.isBlank()) ? post.getImageUrl() : thumbnailUrl;
     }
 }
