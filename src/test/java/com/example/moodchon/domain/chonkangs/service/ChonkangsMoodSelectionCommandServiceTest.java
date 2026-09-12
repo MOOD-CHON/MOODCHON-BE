@@ -75,7 +75,7 @@ class ChonkangsMoodSelectionCommandServiceTest {
 
         verify(chonkangsAccessValidator).validateMember(chonkangId, userId);
         verify(chonkangsMoodSelectionRepository, org.mockito.Mockito.times(3)).save(any());
-        verify(chonkangsMoodResultService).confirmIfAllMembersSubmitted(chonkang);
+        verify(chonkangsMoodResultService).confirmIfAllMembersSubmitted(chonkang, userId);
 
         // 삭제를 flush 로 먼저 반영해야 같은 사진을 다시 고른 재제출이 유니크 제약에 걸리지 않는다.
         InOrder inOrder = org.mockito.Mockito.inOrder(chonkangsMoodSelectionRepository);

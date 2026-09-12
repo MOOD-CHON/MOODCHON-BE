@@ -1,5 +1,6 @@
 package com.example.moodchon.domain.chonkangs.service;
 
+import com.example.moodchon.domain.accommodation.service.RecommendedAccommodationGenerationService;
 import com.example.moodchon.domain.chonkangs.entity.Chonkangs;
 import com.example.moodchon.domain.chonkangs.entity.ChonkangsMoodSelection;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMemberRepository;
@@ -23,8 +24,10 @@ public class ChonkangsMoodResultService {
     private final ChonkangsMemberRepository chonkangsMemberRepository;
     private final ChonkangsMoodSelectionRepository chonkangsMoodSelectionRepository;
     private final MoodTypeRepository moodTypeRepository;
+    private final RecommendedAccommodationGenerationService recommendedAccommodationGenerationService;
 
-    public void confirmIfAllMembersSubmitted(Chonkangs chonkang) {
+    // userId는 방금 마지막으로 무드를 제출한 사람 - 숙소 추천 생성 시 멤버 검증에 쓴다.
+    public void confirmIfAllMembersSubmitted(Chonkangs chonkang, Long userId) {
         List<ChonkangsMoodSelection> selections = chonkangsMoodSelectionRepository.findAllByChonkangId(chonkang.getId());
         long submittedMemberCount = selections.stream()
                 .map(selection -> selection.getUser().getId())
@@ -39,6 +42,11 @@ public class ChonkangsMoodResultService {
         Map<Long, Long> tagCounts = countTagsByTagId(selections);
         MoodType moodType = resolveBestMoodType(tagCounts);
         chonkang.confirmMood(moodType.getName(), moodType.getDescription());
+
+        // 희망 지역을 안 골랐으면(선택 항목이라 null일 수 있음) 추천을 만들 수 없어 건너뛴다.
+        if (chonkang.getDesiredRegion() != null) {
+            recommendedAccommodationGenerationService.generate(chonkang.getId(), userId);
+        }
     }
 
     private Map<Long, Long> countTagsByTagId(List<ChonkangsMoodSelection> selections) {

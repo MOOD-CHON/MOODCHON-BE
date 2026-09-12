@@ -67,7 +67,7 @@ public class ChonkangsCreateService {
         }
 
         // 계획 인원이 1명(호스트 혼자)이면 이 시점에 이미 전원 제출이 완료된 상태다.
-        chonkangsMoodResultService.confirmIfAllMembersSubmitted(chonkang);
+        chonkangsMoodResultService.confirmIfAllMembersSubmitted(chonkang, hostId);
 
         return CreateChonkangResponse.from(chonkang);
     }

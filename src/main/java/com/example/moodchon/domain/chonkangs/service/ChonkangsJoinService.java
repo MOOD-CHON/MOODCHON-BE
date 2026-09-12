@@ -101,7 +101,7 @@ public class ChonkangsJoinService {
                         .post(post)
                         .build());
             }
-            chonkangsMoodResultService.confirmIfAllMembersSubmitted(chonkang);
+            chonkangsMoodResultService.confirmIfAllMembersSubmitted(chonkang, userId);
             isLastParticipant = updatedMemberCount >= chonkang.getPlannedMemberCount();
         }
 
