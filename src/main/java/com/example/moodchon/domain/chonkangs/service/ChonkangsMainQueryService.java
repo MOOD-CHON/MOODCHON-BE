@@ -60,10 +60,12 @@ public class ChonkangsMainQueryService {
         }
         if (status == ChonkangsMainStatus.MOOD_DECIDED) {
             return ChonkangMainResponse.moodDecided(
+                    chonkang.getName(), chonkang.getStartDate(), chonkang.getEndDate(),
                     MoodResultResponse.of(chonkang), buildRecommendedAccommodations(chonkangId, userId));
         }
 
-        return ChonkangMainResponse.moodVoting(buildMoodProgress(chonkangId));
+        return ChonkangMainResponse.moodVoting(
+                chonkang.getName(), chonkang.getStartDate(), chonkang.getEndDate(), buildMoodProgress(chonkangId));
     }
 
     private MoodProgressResponse buildMoodProgress(Long chonkangId) {
@@ -121,7 +123,9 @@ public class ChonkangsMainQueryService {
                 .map(this::toItineraryResponse)
                 .orElse(null);
 
-        return ChonkangMainResponse.accommodationConfirmed(MoodResultResponse.of(chonkang), confirmedAccommodation, itinerary);
+        return ChonkangMainResponse.accommodationConfirmed(
+                chonkang.getName(), chonkang.getStartDate(), chonkang.getEndDate(),
+                MoodResultResponse.of(chonkang), confirmedAccommodation, itinerary);
     }
 
     private RecommendedItineraryResponse toItineraryResponse(RecommendedItinerary itinerary) {
