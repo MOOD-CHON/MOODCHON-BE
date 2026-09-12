@@ -5,6 +5,7 @@ import com.example.moodchon.domain.chonkangs.dto.request.UpdateChonkangInfoReque
 import com.example.moodchon.domain.chonkangs.dto.response.ChonkangInviteCodeResponse;
 import com.example.moodchon.domain.chonkangs.dto.response.ChonkangMainResponse;
 import com.example.moodchon.domain.chonkangs.dto.response.ChonkangMemberResponse;
+import com.example.moodchon.domain.chonkangs.dto.response.ChonkangTripInfoResponse;
 import com.example.moodchon.domain.chonkangs.dto.response.LeaveChonkangResponse;
 import com.example.moodchon.domain.chonkangs.dto.response.MoodResultDetailResponse;
 import com.example.moodchon.domain.chonkangs.dto.response.UpdateChonkangInfoResponse;
@@ -14,6 +15,7 @@ import com.example.moodchon.domain.chonkangs.service.ChonkangsMembershipService;
 import com.example.moodchon.domain.chonkangs.service.ChonkangsMoodReminderService;
 import com.example.moodchon.domain.chonkangs.service.ChonkangsMoodResultQueryService;
 import com.example.moodchon.domain.chonkangs.service.ChonkangsMoodSelectionCommandService;
+import com.example.moodchon.domain.chonkangs.service.ChonkangsTripInfoQueryService;
 import com.example.moodchon.global.common.ApiResponse;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -38,6 +40,7 @@ public class ChonkangsRoomController {
     private final ChonkangsMainQueryService chonkangsMainQueryService;
     private final ChonkangsMoodReminderService chonkangsMoodReminderService;
     private final ChonkangsMoodResultQueryService chonkangsMoodResultQueryService;
+    private final ChonkangsTripInfoQueryService chonkangsTripInfoQueryService;
 
     @GetMapping("/main")
     public ApiResponse<ChonkangMainResponse> getMain(
@@ -51,6 +54,13 @@ public class ChonkangsRoomController {
             @PathVariable Long chonkangId,
             @AuthenticationPrincipal Long userId) {
         return ApiResponse.success(chonkangsMoodResultQueryService.getDetail(chonkangId, userId));
+    }
+
+    @GetMapping("/trip-info")
+    public ApiResponse<ChonkangTripInfoResponse> getTripInfo(
+            @PathVariable Long chonkangId,
+            @AuthenticationPrincipal Long userId) {
+        return ApiResponse.success(chonkangsTripInfoQueryService.getTripInfo(chonkangId, userId));
     }
 
     @PatchMapping("/info")
