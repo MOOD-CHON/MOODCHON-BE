@@ -59,15 +59,12 @@ public class Chonkangs extends BaseEntity {
     private int plannedMemberCount;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private CompanionType companionType;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private TravelMethod travelMethod;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Region desiredRegion;
 
     @ElementCollection(fetch = FetchType.LAZY)
