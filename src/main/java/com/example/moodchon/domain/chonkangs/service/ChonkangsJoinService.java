@@ -36,6 +36,7 @@ public class ChonkangsJoinService {
     private final UserRepository userRepository;
     private final TripDateValidator tripDateValidator;
     private final MoodCardResolver moodCardResolver;
+    private final ChonkangsMoodResultService chonkangsMoodResultService;
 
     @Transactional(readOnly = true)
     public ChonkangTripInfoResponse getTripInfo(String inviteCode) {
@@ -100,6 +101,7 @@ public class ChonkangsJoinService {
                         .post(post)
                         .build());
             }
+            chonkangsMoodResultService.confirmIfAllMembersSubmitted(chonkang);
             isLastParticipant = updatedMemberCount >= chonkang.getPlannedMemberCount();
         }
 

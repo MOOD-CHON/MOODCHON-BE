@@ -31,6 +31,7 @@ public class ChonkangsCreateService {
     private final InviteCodeGenerator inviteCodeGenerator;
     private final TripDateValidator tripDateValidator;
     private final MoodCardResolver moodCardResolver;
+    private final ChonkangsMoodResultService chonkangsMoodResultService;
 
     public CreateChonkangResponse create(Long hostId, CreateChonkangRequest request) {
         tripDateValidator.validate(request.startDate(), request.endDate());
@@ -64,6 +65,9 @@ public class ChonkangsCreateService {
                     .post(post)
                     .build());
         }
+
+        // 계획 인원이 1명(호스트 혼자)이면 이 시점에 이미 전원 제출이 완료된 상태다.
+        chonkangsMoodResultService.confirmIfAllMembersSubmitted(chonkang);
 
         return CreateChonkangResponse.from(chonkang);
     }
