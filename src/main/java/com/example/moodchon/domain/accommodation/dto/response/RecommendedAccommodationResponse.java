@@ -19,11 +19,13 @@ public record RecommendedAccommodationResponse(
         Boolean cookingAvailable,
         Boolean petFriendly,
         long voteCount,
-        boolean votedByMe
+        boolean votedByMe,
+        List<AccommodationVoterResponse> voters
 ) {
 
     public static RecommendedAccommodationResponse of(RecommendedAccommodation recommendedAccommodation,
-                                                        List<String> images, long voteCount, boolean votedByMe) {
+                                                        List<String> images, long voteCount, boolean votedByMe,
+                                                        List<AccommodationVoterResponse> voters) {
         Place place = recommendedAccommodation.getPlace();
         return new RecommendedAccommodationResponse(
                 place.getId(),
@@ -40,7 +42,8 @@ public record RecommendedAccommodationResponse(
                 recommendedAccommodation.getCookingAvailable(),
                 recommendedAccommodation.getPetFriendly(),
                 voteCount,
-                votedByMe
+                votedByMe,
+                voters
         );
     }
 }

@@ -34,9 +34,11 @@ public class RecommendedAccommodationQueryService {
                 recommendedAccommodationRepository.findAllByChonkangIdOrderByRankAsc(chonkangId);
 
         Map<Long, List<String>> imagesByPlaceId = imagesByPlaceId(recommendations);
+        Map<Long, List<AccommodationVoterResponse>> votersByRecommendedAccommodationId =
+                votersByRecommendedAccommodationId(recommendations);
 
         return recommendations.stream()
-                .map(recommendation -> toResponse(recommendation, userId, imagesByPlaceId))
+                .map(recommendation -> toResponse(recommendation, userId, imagesByPlaceId, votersByRecommendedAccommodationId))
                 .toList();
     }
 
@@ -48,7 +50,9 @@ public class RecommendedAccommodationQueryService {
                 .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND));
 
         Map<Long, List<String>> imagesByPlaceId = imagesByPlaceId(List.of(recommended));
-        return toResponse(recommended, userId, imagesByPlaceId);
+        Map<Long, List<AccommodationVoterResponse>> votersByRecommendedAccommodationId =
+                votersByRecommendedAccommodationId(List.of(recommended));
+        return toResponse(recommended, userId, imagesByPlaceId, votersByRecommendedAccommodationId);
     }
 
     public List<AccommodationVoterResponse> getVoters(Long chonkangId, Long userId, Long placeId) {
@@ -74,12 +78,28 @@ public class RecommendedAccommodationQueryService {
                         Collectors.mapping(Post::getImageUrl, Collectors.toList())));
     }
 
+    private Map<Long, List<AccommodationVoterResponse>> votersByRecommendedAccommodationId(
+            List<RecommendedAccommodation> recommendations) {
+        List<Long> recommendedAccommodationIds = recommendations.stream()
+                .map(RecommendedAccommodation::getId)
+                .toList();
+
+        return accommodationVoteRepository.findAllWithUserByRecommendedAccommodationIdIn(recommendedAccommodationIds)
+                .stream()
+                .collect(Collectors.groupingBy(
+                        vote -> vote.getRecommendedAccommodation().getId(),
+                        Collectors.mapping(AccommodationVoterResponse::from, Collectors.toList())));
+    }
+
     private RecommendedAccommodationResponse toResponse(RecommendedAccommodation recommended, Long userId,
-                                                          Map<Long, List<String>> imagesByPlaceId) {
+                                                          Map<Long, List<String>> imagesByPlaceId,
+                                                          Map<Long, List<AccommodationVoterResponse>> votersByRecommendedAccommodationId) {
         List<String> images = imagesByPlaceId.getOrDefault(recommended.getPlace().getId(), List.of());
         long voteCount = accommodationVoteRepository.countByRecommendedAccommodationId(recommended.getId());
         boolean votedByMe = accommodationVoteRepository
                 .existsByRecommendedAccommodationIdAndUserId(recommended.getId(), userId);
-        return RecommendedAccommodationResponse.of(recommended, images, voteCount, votedByMe);
+        List<AccommodationVoterResponse> voters =
+                votersByRecommendedAccommodationId.getOrDefault(recommended.getId(), List.of());
+        return RecommendedAccommodationResponse.of(recommended, images, voteCount, votedByMe, voters);
     }
 }
