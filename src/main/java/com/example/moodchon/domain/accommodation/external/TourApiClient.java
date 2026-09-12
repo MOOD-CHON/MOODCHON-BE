@@ -38,6 +38,41 @@ public class TourApiClient {
         return TourApiCategoryCode.syncableCategories();
     }
 
+    // PhotoGalleryService1 gallerySearchList1 - 포토코리아 큐레이션 사진을 장소 이름으로 검색한다.
+    // 관광지/레포츠는 매칭이 잘 되지만 특정 숙소 상호명·소규모 행사명은 거의 안 걸린다.
+    // 실패하거나 못 찾으면(에러가 아니라 정상적인 0건도 포함) null을 반환해 동기화를 막지 않는다.
+    public String searchGalleryImage(String keyword) {
+        try {
+            String rawResponseBody = restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("https")
+                            .host("apis.data.go.kr")
+                            .path("/B551011/PhotoGalleryService1/gallerySearchList1")
+                            .queryParam("serviceKey", properties.serviceKey())
+                            .queryParam("MobileOS", "ETC")
+                            .queryParam("MobileApp", "moodchon")
+                            .queryParam("_type", "json")
+                            .queryParam("keyword", keyword)
+                            .queryParam("numOfRows", 1)
+                            .queryParam("pageNo", 1)
+                            .build())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .body(String.class);
+
+            JsonNode root = jsonMapper.readTree(rawResponseBody);
+            JsonNode itemNode = root.path("response").path("body").path("items").path("item");
+            if (!itemNode.isObject() && !itemNode.isArray()) {
+                return null;
+            }
+
+            String imageUrl = firstItem(itemNode).path("galWebImageUrl").asString("");
+            return imageUrl.isBlank() ? null : imageUrl;
+        } catch (RestClientException | JacksonException e) {
+            return null;
+        }
+    }
+
     public String fetchOverview(String contentId) {
         try {
             String rawResponseBody = restClient.get()
@@ -163,20 +198,53 @@ public class TourApiClient {
 
             JsonNode root = jsonMapper.readTree(rawResponseBody);
             JsonNode item = firstItem(root.path("response").path("body").path("items").path("item"));
-            return toLodgingIntroFields(item);
+            return toLodgingIntroFields(item, fetchPetAccompanyType(contentId));
         } catch (RestClientException | JacksonException e) {
             throw new CustomException(ErrorCode.TOUR_API_REQUEST_FAILED);
         }
     }
 
-    private TourApiLodgingIntroFields toLodgingIntroFields(JsonNode item) {
+    private TourApiLodgingIntroFields toLodgingIntroFields(JsonNode item, String petAccompanyType) {
         return new TourApiLodgingIntroFields(
                 item.path("checkintime").asString(""),
                 item.path("checkouttime").asString(""),
                 item.path("chkcooking").asString(""),
                 item.path("barbecue").asString(""),
-                item.path("accomcountlodging").asString("")
+                item.path("accomcountlodging").asString(""),
+                petAccompanyType
         );
+    }
+
+    // detailPetTour2 - 반려동물 동반여행 정보. 등록된 숙소가 적어 대부분 결과가 없고, 그건 정상이라
+    // 예외로 취급하지 않는다 (실패 시에도 null만 반환해 숙소 추천 생성 자체를 막지 않는다).
+    private String fetchPetAccompanyType(String contentId) {
+        try {
+            String rawResponseBody = restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("https")
+                            .host("apis.data.go.kr")
+                            .path("/B551011/KorService2/detailPetTour2")
+                            .queryParam("serviceKey", properties.serviceKey())
+                            .queryParam("MobileOS", "ETC")
+                            .queryParam("MobileApp", "moodchon")
+                            .queryParam("_type", "json")
+                            .queryParam("contentId", contentId)
+                            .build())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .body(String.class);
+
+            JsonNode root = jsonMapper.readTree(rawResponseBody);
+            JsonNode itemNode = root.path("response").path("body").path("items").path("item");
+            if (!itemNode.isObject() && !itemNode.isArray()) {
+                return null;
+            }
+
+            String type = firstItem(itemNode).path("acmpyTypeCd").asString("");
+            return type.isBlank() ? null : type;
+        } catch (RestClientException | JacksonException e) {
+            return null;
+        }
     }
 
     public List<String> fetchImages(String contentId) {

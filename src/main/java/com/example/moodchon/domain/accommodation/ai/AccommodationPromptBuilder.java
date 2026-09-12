@@ -22,7 +22,7 @@ final class AccommodationPromptBuilder {
                 - placeId는 반드시 후보 숙소 목록에 있는 값만 사용한다.
                 - 후보 숙소 전체에 대해 각각 하나씩 결과를 만든다.
                 - matchScore는 0~100 사이 정수로, 이 숙소가 주어진 무드와 얼마나 어울리는지를 평가한다.
-                  인원수를 충분히 수용하지 못하거나 희망 조건(바베큐/취사)을 만족하지 못하면 감점한다.
+                  인원수를 충분히 수용하지 못하거나 희망 조건(바베큐/취사/반려동물 동반)을 만족하지 못하면 감점한다.
                   단, 정보없음으로 표시된 항목은 만족 여부를 알 수 없으니 감점 근거로 쓰지 않는다.
                 - tags는 이 숙소를 설명하는 짧은 키워드를 1~3개 한국어로 제시한다.
                 - highlights는 이 숙소가 무드와 잘 맞는 이유를 1~3개의 짧은 문장으로 자연스러운 한국어로 설명한다.
@@ -49,6 +49,7 @@ final class AccommodationPromptBuilder {
                     .append(", description=").append(truncateDescription(place.getDescription()))
                     .append(", 바베큐=").append(describeFlag(intro.barbecue()))
                     .append(", 취사=").append(describeText(intro.chkCooking()))
+                    .append(", 반려동물 동반=").append(describeText(intro.petAccompanyType()))
                     .append(", 수용인원=").append(describeText(intro.accomCountLodging()))
                     .append('\n');
         }
@@ -69,12 +70,11 @@ final class AccommodationPromptBuilder {
         return joined.isEmpty() ? "특별한 조건 없음" : joined;
     }
 
-    // PET_FRIENDLY는 TourAPI 숙소 데이터에 대응하는 필드가 없어 평가에서 제외한다.
     private static String describeCondition(AccommodationCondition condition) {
         return switch (condition) {
             case BARBECUE -> "바베큐 가능 숙소 선호";
             case COOKING -> "취사 가능 숙소 선호";
-            case PET_FRIENDLY -> null;
+            case PET_FRIENDLY -> "반려동물 동반 가능 숙소 선호";
         };
     }
 
