@@ -3,7 +3,6 @@ package com.example.moodchon.domain.chonkangs.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import com.example.moodchon.domain.accommodation.service.RecommendedAccommodationGenerationService;
 import com.example.moodchon.domain.chonkangs.entity.Chonkangs;
 import com.example.moodchon.domain.chonkangs.entity.ChonkangsMoodSelection;
 import com.example.moodchon.domain.chonkangs.entity.CompanionType;
@@ -45,7 +44,7 @@ class ChonkangsMoodResultServiceTest {
     private MoodTypeRepository moodTypeRepository;
 
     @Mock
-    private RecommendedAccommodationGenerationService recommendedAccommodationGenerationService;
+    private org.springframework.context.ApplicationEventPublisher applicationEventPublisher;
 
     @InjectMocks
     private ChonkangsMoodResultService chonkangsMoodResultService;
