@@ -5,8 +5,8 @@ import com.example.moodchon.domain.chonkangs.entity.Chonkangs;
 import com.example.moodchon.domain.chonkangs.entity.ChonkangsMoodSelection;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMoodSelectionRepository;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsRepository;
-import com.example.moodchon.domain.mood.entity.MoodCard;
 import com.example.moodchon.domain.mood.service.MoodCardResolver;
+import com.example.moodchon.domain.place.entity.Post;
 import com.example.moodchon.domain.user.entity.User;
 import com.example.moodchon.domain.user.repository.UserRepository;
 import com.example.moodchon.global.exception.CustomException;
@@ -36,14 +36,18 @@ public class ChonkangsMoodSelectionCommandService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND));
 
-        List<MoodCard> moodCards = moodCardResolver.resolveExactlyThree(request.selectedMoodCardIds());
+        List<Post> selectedPosts = moodCardResolver.resolveExactlyThree(request.selectedMoodCardIds());
 
         chonkangsMoodSelectionRepository.deleteAllByChonkangIdAndUserId(chonkangId, userId);
-        for (MoodCard moodCard : moodCards) {
+        // Hibernate는 한 번의 flush에서 INSERT를 DELETE보다 먼저 실행한다. 여기서 강제로 flush 하지 않으면
+        // 같은 사진을 다시 고른 재제출이 (chonkang_id, user_id, post_id) 유니크 제약에 걸린다.
+        chonkangsMoodSelectionRepository.flush();
+
+        for (Post post : selectedPosts) {
             chonkangsMoodSelectionRepository.save(ChonkangsMoodSelection.builder()
                     .chonkang(chonkang)
                     .user(user)
-                    .moodCard(moodCard)
+                    .post(post)
                     .build());
         }
 

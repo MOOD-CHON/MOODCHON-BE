@@ -12,6 +12,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     List<Post> findAllByPlaceIdIn(List<Long> placeIds);
 
+    // 무드 카드 풀. 카드 선택 화면은 게시물의 장소·태그를 함께 보여주므로 한 번에 fetch join 한다.
+    @Query("SELECT DISTINCT p FROM Post p JOIN FETCH p.place LEFT JOIN FETCH p.tags")
+    List<Post> findAllWithPlaceAndTags();
+
     List<Post> findAllByOrderByCreatedAtDesc();
 
     List<Post> findAllByTagsIdOrderByCreatedAtDesc(Long tagId);
