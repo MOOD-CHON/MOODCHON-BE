@@ -23,6 +23,9 @@ public record ChonkangTripInfoResponse(
         boolean moodDecided
 ) {
 
+    // accommodationConditions는 지연 로딩 컬렉션이라, 트랜잭션이 끝난 뒤(응답 직렬화 시점)
+    // 접근하면 LazyInitializationException이 난다. 여기서 새 HashSet으로 복사해
+    // 트랜잭션이 열려있는 이 시점에 강제로 초기화해둔다.
     public static ChonkangTripInfoResponse of(Chonkangs chonkang, long currentMemberCount) {
         return new ChonkangTripInfoResponse(
                 chonkang.getId(),
@@ -33,8 +36,6 @@ public record ChonkangTripInfoResponse(
                 chonkang.getCompanionType(),
                 chonkang.getTravelMethod(),
                 chonkang.getDesiredRegion(),
-                // open-in-view=false라 트랜잭션 밖(Jackson 직렬화 시점)에서 지연 컬렉션에 접근하면
-                // LazyInitializationException이 난다 — 서비스가 아직 세션을 들고 있는 지금 실제 값으로 복사해둔다.
                 new HashSet<>(chonkang.getAccommodationConditions()),
                 currentMemberCount,
                 chonkang.isMoodDecided()

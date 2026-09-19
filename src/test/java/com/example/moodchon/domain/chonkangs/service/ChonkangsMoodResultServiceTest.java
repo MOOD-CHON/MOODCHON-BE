@@ -43,6 +43,9 @@ class ChonkangsMoodResultServiceTest {
     @Mock
     private MoodTypeRepository moodTypeRepository;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher applicationEventPublisher;
+
     @InjectMocks
     private ChonkangsMoodResultService chonkangsMoodResultService;
 
@@ -57,7 +60,7 @@ class ChonkangsMoodResultServiceTest {
                 .thenReturn(List.of(moodSelection(chonkang, submitted, post)));
         when(chonkangsMemberRepository.countByChonkangId(1L)).thenReturn(3L);
 
-        chonkangsMoodResultService.confirmIfAllMembersSubmitted(chonkang);
+        chonkangsMoodResultService.confirmIfAllMembersSubmitted(chonkang, 1L);
 
         assertThat(chonkang.isMoodDecided()).isFalse();
     }
@@ -84,7 +87,7 @@ class ChonkangsMoodResultServiceTest {
         when(chonkangsMemberRepository.countByChonkangId(1L)).thenReturn(2L);
         when(moodTypeRepository.findAllWithCoreTags()).thenReturn(List.of(quietAlleyType, livelyType));
 
-        chonkangsMoodResultService.confirmIfAllMembersSubmitted(chonkang);
+        chonkangsMoodResultService.confirmIfAllMembersSubmitted(chonkang, 1L);
 
         assertThat(chonkang.isMoodDecided()).isTrue();
         assertThat(chonkang.getMoodName()).isEqualTo("고즈넉한 쉼표 무드");
@@ -107,7 +110,7 @@ class ChonkangsMoodResultServiceTest {
         when(chonkangsMemberRepository.countByChonkangId(1L)).thenReturn(1L);
         when(moodTypeRepository.findAllWithCoreTags()).thenReturn(List.of(higherIdType, lowerIdType));
 
-        chonkangsMoodResultService.confirmIfAllMembersSubmitted(chonkang);
+        chonkangsMoodResultService.confirmIfAllMembersSubmitted(chonkang, 1L);
 
         assertThat(chonkang.getMoodName()).isEqualTo("무드A");
     }

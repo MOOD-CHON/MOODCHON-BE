@@ -13,6 +13,7 @@ import com.example.moodchon.domain.place.entity.PlaceCategory;
 import com.example.moodchon.domain.place.entity.Post;
 import com.example.moodchon.domain.place.repository.PlaceRepository;
 import com.example.moodchon.domain.place.repository.PostRepository;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class PlaceContentSyncService {
 
     private static final int PLACE_SEARCH_COUNT = 20;
+
+    // 관광사진갤러리는 관광지·레포츠는 매칭이 잘 되지만 숙소 상호명·소규모 행사명은 거의 안 걸려서
+    // 이 두 카테고리만 검색한다 (하루 호출 한도를 불필요하게 쓰지 않기 위함).
+    private static final Set<PlaceCategory> GALLERY_SEARCHABLE_CATEGORIES =
+            EnumSet.of(PlaceCategory.TOURIST_SPOT, PlaceCategory.LEISURE_SPORTS);
 
     private final TourApiClient tourApiClient;
     private final PlaceRepository placeRepository;
@@ -71,6 +77,10 @@ public class PlaceContentSyncService {
 
         if (place.getDescription() == null) {
             place.updateDescription(tourApiClient.fetchOverview(tourApiPlace.contentId()));
+        }
+
+        if (place.getGalleryImageUrl() == null && GALLERY_SEARCHABLE_CATEGORIES.contains(category)) {
+            place.updateGalleryImageUrl(tourApiClient.searchGalleryImage(place.getName()));
         }
 
         if (postRepository.existsByPlaceId(place.getId())) {

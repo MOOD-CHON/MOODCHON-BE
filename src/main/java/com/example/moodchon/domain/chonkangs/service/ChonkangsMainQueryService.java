@@ -1,5 +1,6 @@
 package com.example.moodchon.domain.chonkangs.service;
 
+import com.example.moodchon.domain.accommodation.dto.response.AccommodationVoterResponse;
 import com.example.moodchon.domain.accommodation.dto.response.RecommendedAccommodationResponse;
 import com.example.moodchon.domain.accommodation.entity.RecommendedAccommodation;
 import com.example.moodchon.domain.accommodation.repository.AccommodationVoteRepository;
@@ -15,6 +16,7 @@ import com.example.moodchon.domain.chonkangs.entity.ChonkangsMember;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMemberRepository;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMoodSelectionRepository;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsRepository;
+import com.example.moodchon.domain.place.entity.Place;
 import com.example.moodchon.domain.place.entity.Post;
 import com.example.moodchon.domain.place.repository.PostRepository;
 import com.example.moodchon.domain.recommendation.dto.response.RecommendedItineraryResponse;
@@ -60,10 +62,12 @@ public class ChonkangsMainQueryService {
         }
         if (status == ChonkangsMainStatus.MOOD_DECIDED) {
             return ChonkangMainResponse.moodDecided(
+                    chonkang.getName(), chonkang.getStartDate(), chonkang.getEndDate(),
                     MoodResultResponse.of(chonkang), buildRecommendedAccommodations(chonkangId, userId));
         }
 
-        return ChonkangMainResponse.moodVoting(buildMoodProgress(chonkangId));
+        return ChonkangMainResponse.moodVoting(
+                chonkang.getName(), chonkang.getStartDate(), chonkang.getEndDate(), buildMoodProgress(chonkangId));
     }
 
     private MoodProgressResponse buildMoodProgress(Long chonkangId) {
@@ -86,10 +90,25 @@ public class ChonkangsMainQueryService {
                 .toList();
 
         Map<Long, List<String>> imagesByPlaceId = imagesByPlaceId(recommendations);
+        Map<Long, List<AccommodationVoterResponse>> votersByRecommendedAccommodationId =
+                votersByRecommendedAccommodationId(recommendations);
 
         return recommendations.stream()
-                .map(recommendation -> toResponse(recommendation, userId, imagesByPlaceId))
+                .map(recommendation -> toResponse(recommendation, userId, imagesByPlaceId, votersByRecommendedAccommodationId))
                 .toList();
+    }
+
+    private Map<Long, List<AccommodationVoterResponse>> votersByRecommendedAccommodationId(
+            List<RecommendedAccommodation> recommendations) {
+        List<Long> recommendedAccommodationIds = recommendations.stream()
+                .map(RecommendedAccommodation::getId)
+                .toList();
+
+        return accommodationVoteRepository.findAllWithUserByRecommendedAccommodationIdIn(recommendedAccommodationIds)
+                .stream()
+                .collect(Collectors.groupingBy(
+                        vote -> vote.getRecommendedAccommodation().getId(),
+                        Collectors.mapping(AccommodationVoterResponse::from, Collectors.toList())));
     }
 
     private Map<Long, List<String>> imagesByPlaceId(List<RecommendedAccommodation> recommendations) {
@@ -104,24 +123,34 @@ public class ChonkangsMainQueryService {
     }
 
     private RecommendedAccommodationResponse toResponse(RecommendedAccommodation recommended, Long userId,
-                                                          Map<Long, List<String>> imagesByPlaceId) {
+                                                          Map<Long, List<String>> imagesByPlaceId,
+                                                          Map<Long, List<AccommodationVoterResponse>> votersByRecommendedAccommodationId) {
         List<String> images = imagesByPlaceId.getOrDefault(recommended.getPlace().getId(), List.of());
         long voteCount = accommodationVoteRepository.countByRecommendedAccommodationId(recommended.getId());
         boolean votedByMe = accommodationVoteRepository
                 .existsByRecommendedAccommodationIdAndUserId(recommended.getId(), userId);
-        return RecommendedAccommodationResponse.of(recommended, images, voteCount, votedByMe);
+        List<AccommodationVoterResponse> voters =
+                votersByRecommendedAccommodationId.getOrDefault(recommended.getId(), List.of());
+        return RecommendedAccommodationResponse.of(recommended, images, voteCount, votedByMe, voters);
     }
 
     private ChonkangMainResponse buildAccommodationConfirmed(Chonkangs chonkang) {
+        Place place = chonkang.getConfirmedAccommodation();
+        // 추천을 거쳐 확정된 숙소면 AI가 만든 태그·좋은 점을 카드에 함께 보여준다.
+        RecommendedAccommodation recommended = recommendedAccommodationRepository
+                .findFirstByChonkangIdAndPlaceIdOrderByIdDesc(chonkang.getId(), place.getId())
+                .orElse(null);
         ConfirmedAccommodationResponse confirmedAccommodation =
-                ConfirmedAccommodationResponse.of(chonkang.getConfirmedAccommodation());
+                ConfirmedAccommodationResponse.of(place, recommended);
 
         RecommendedItineraryResponse itinerary = recommendedItineraryRepository.findByChonkangId(chonkang.getId())
                 .filter(RecommendedItinerary::isCommitted)
                 .map(this::toItineraryResponse)
                 .orElse(null);
 
-        return ChonkangMainResponse.accommodationConfirmed(MoodResultResponse.of(chonkang), confirmedAccommodation, itinerary);
+        return ChonkangMainResponse.accommodationConfirmed(
+                chonkang.getName(), chonkang.getStartDate(), chonkang.getEndDate(),
+                MoodResultResponse.of(chonkang), confirmedAccommodation, itinerary);
     }
 
     private RecommendedItineraryResponse toItineraryResponse(RecommendedItinerary itinerary) {

@@ -5,6 +5,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.moodchon.domain.accommodation.repository.AccommodationVoteRepository;
 import com.example.moodchon.domain.accommodation.repository.RecommendedAccommodationRepository;
 import com.example.moodchon.domain.chonkangs.dto.response.ChonkangMainResponse;
 import com.example.moodchon.domain.chonkangs.dto.response.MemberMoodProgressResponse;
@@ -19,6 +20,8 @@ import com.example.moodchon.domain.chonkangs.repository.ChonkangsMemberRepositor
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMoodSelectionRepository;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsRepository;
 import com.example.moodchon.domain.place.repository.PostRepository;
+import com.example.moodchon.domain.recommendation.repository.RecommendedItineraryItemRepository;
+import com.example.moodchon.domain.recommendation.repository.RecommendedItineraryRepository;
 import com.example.moodchon.domain.mood.entity.MoodTag;
 import com.example.moodchon.domain.place.entity.Place;
 import com.example.moodchon.domain.place.entity.PlaceCategory;
@@ -58,6 +61,15 @@ class ChonkangsMainQueryServiceTest {
 
     @Mock
     private PostRepository postRepository;
+
+    @Mock
+    private AccommodationVoteRepository accommodationVoteRepository;
+
+    @Mock
+    private RecommendedItineraryRepository recommendedItineraryRepository;
+
+    @Mock
+    private RecommendedItineraryItemRepository recommendedItineraryItemRepository;
 
     @InjectMocks
     private ChonkangsMainQueryService chonkangsMainQueryService;

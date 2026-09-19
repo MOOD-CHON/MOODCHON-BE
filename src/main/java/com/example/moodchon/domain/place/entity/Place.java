@@ -49,6 +49,10 @@ public class Place extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    // 관광사진갤러리(포토코리아) 큐레이션 사진. 장소 이름으로 검색해 찾으면 채워지고,
+    // 못 찾으면 계속 null이라 thumbnailUrl로 대체된다.
+    private String galleryImageUrl;
+
     @Builder
     private Place(String externalContentId, String name, PlaceCategory category, String address,
                   Double latitude, Double longitude, String thumbnailUrl, String description) {
@@ -64,5 +68,9 @@ public class Place extends BaseEntity {
 
     public void updateDescription(String description) {
         this.description = description;
+    }
+
+    public void updateGalleryImageUrl(String galleryImageUrl) {
+        this.galleryImageUrl = galleryImageUrl;
     }
 }

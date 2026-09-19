@@ -21,4 +21,13 @@ public interface AccommodationVoteRepository extends JpaRepository<Accommodation
             """)
     List<AccommodationVote> findAllWithUserByRecommendedAccommodationId(
             @Param("recommendedAccommodationId") Long recommendedAccommodationId);
+
+    // 숙소 리스트 응답에 카드별 투표자를 한 번에 채워주기 위한 배치 조회.
+    @Query("""
+            SELECT v FROM AccommodationVote v
+            JOIN FETCH v.user
+            WHERE v.recommendedAccommodation.id IN :recommendedAccommodationIds
+            """)
+    List<AccommodationVote> findAllWithUserByRecommendedAccommodationIdIn(
+            @Param("recommendedAccommodationIds") List<Long> recommendedAccommodationIds);
 }

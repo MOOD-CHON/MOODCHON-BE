@@ -51,6 +51,6 @@ public class ChonkangsMoodSelectionCommandService {
                     .build());
         }
 
-        chonkangsMoodResultService.confirmIfAllMembersSubmitted(chonkang);
+        chonkangsMoodResultService.confirmIfAllMembersSubmitted(chonkang, userId);
     }
 }
