@@ -18,7 +18,14 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     List<Post> findAllByOrderByCreatedAtDesc();
 
-    List<Post> findAllByTagsIdOrderByCreatedAtDesc(Long tagId);
+    // 분위기 태그별로 그 태그가 붙은 장소 수. 탐색 탭 대표 태그를 고르는 기준이다. [태그 id, 장소 수]
+    @Query("""
+            SELECT t.id, COUNT(DISTINCT p.place.id)
+            FROM Post p JOIN p.tags t
+            WHERE t.category = com.example.moodchon.domain.mood.entity.MoodTagCategory.ATMOSPHERE
+            GROUP BY t.id
+            """)
+    List<Object[]> countPlacesByAtmosphereTag();
 
     @Query("""
             SELECT p FROM Post p
