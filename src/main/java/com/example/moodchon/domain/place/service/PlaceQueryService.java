@@ -1,6 +1,5 @@
 package com.example.moodchon.domain.place.service;
 
-import com.example.moodchon.domain.mood.entity.MoodTag;
 import com.example.moodchon.domain.place.dto.response.PlaceDetailResponse;
 import com.example.moodchon.domain.place.entity.Place;
 import com.example.moodchon.domain.place.entity.Post;
@@ -22,6 +21,7 @@ public class PlaceQueryService {
     private final PlaceRepository placeRepository;
     private final PostRepository postRepository;
     private final SaveFolderPlaceRepository saveFolderPlaceRepository;
+    private final RepresentativeMoodTagResolver representativeMoodTagResolver;
 
     public PlaceDetailResponse getDetail(Long placeId, Long userId) {
         Place place = placeRepository.findById(placeId)
@@ -31,11 +31,11 @@ public class PlaceQueryService {
         List<String> images = posts.stream()
                 .map(Post::getImageUrl)
                 .toList();
-        List<String> tags = posts.stream()
-                .flatMap(post -> post.getTags().stream())
-                .map(MoodTag::getName)
-                .distinct()
-                .toList();
+        // 탐색 카드와 같은 대표 무드 태그 한 개만 내려준다(장소 하나에 태그 하나).
+        List<String> tags = representativeMoodTagResolver
+                .representative(posts.stream().flatMap(post -> post.getTags().stream()).toList())
+                .map(tag -> List.of(tag.getName()))
+                .orElse(List.of());
 
         boolean saved = saveFolderPlaceRepository.existsBySaveFolder_UserIdAndPlaceId(userId, placeId);
 
