@@ -3,6 +3,7 @@ package com.example.moodchon.domain.accommodation.entity;
 import com.example.moodchon.domain.chonkangs.entity.Chonkangs;
 import com.example.moodchon.domain.place.entity.Place;
 import com.example.moodchon.global.entity.BaseEntity;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -13,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
@@ -84,8 +86,10 @@ public class RecommendedAccommodation extends BaseEntity {
     private String contact;
     private String reservationUrl;
 
-    // TourAPI에는 객실별 가격/정원 데이터가 없어 "양실 1실"처럼 요약 텍스트로만 저장한다.
-    private String roomSummary;
+    // TourAPI detailInfo2에서 가져온 객실 목록. 추천을 지우면 객실도 같이 지운다.
+    @OneToMany(mappedBy = "recommendedAccommodation", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderColumn(name = "room_order")
+    private List<RecommendedAccommodationRoom> rooms = new ArrayList<>();
 
     @Builder
     private RecommendedAccommodation(Chonkangs chonkang, Place place, int matchScore, int rank,
@@ -94,7 +98,7 @@ public class RecommendedAccommodation extends BaseEntity {
                                       Boolean bicycleAvailable, Boolean campfireAvailable, Boolean parkingAvailable,
                                       Boolean saunaAvailable, Boolean sportsAvailable,
                                       String checkInTime, String checkOutTime, String contact,
-                                      String reservationUrl, String roomSummary) {
+                                      String reservationUrl) {
         this.chonkang = chonkang;
         this.place = place;
         this.matchScore = matchScore;
@@ -114,6 +118,18 @@ public class RecommendedAccommodation extends BaseEntity {
         this.checkOutTime = checkOutTime;
         this.contact = contact;
         this.reservationUrl = reservationUrl;
-        this.roomSummary = roomSummary;
+    }
+
+    // 배치로 나눠 저장하기 때문에 새 배치가 들어올 때마다 전체 순위를 다시 매긴다.
+    public void updateRank(int rank) {
+        this.rank = rank;
+    }
+
+    // 객실은 추천을 저장한 뒤 채운다. 양쪽 참조를 함께 맞춰야 cascade 저장이 동작한다.
+    public void replaceRooms(List<RecommendedAccommodationRoom> newRooms) {
+        this.rooms.clear();
+        if (newRooms != null) {
+            this.rooms.addAll(newRooms);
+        }
     }
 }

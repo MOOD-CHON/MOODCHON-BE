@@ -5,7 +5,9 @@ import com.example.moodchon.domain.place.entity.PlaceCategory;
 import com.example.moodchon.global.exception.CustomException;
 import com.example.moodchon.global.exception.ErrorCode;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -18,6 +20,29 @@ import tools.jackson.databind.json.JsonMapper;
 // 한국관광공사 TourAPI 4.0 areaBasedList2 / detailCommon2 / detailImage2. 실제 서비스키로 호출 검증 완료.
 @Component
 public class TourApiClient {
+
+    private static final int ROOM_MAX_COUNT = 20;
+    private static final int LIST_PAGE_SIZE = 100;
+    // 전국 숙소가 약 3천 곳이라 30페이지면 전부 훑는다. 무한 루프 방지용 상한이다.
+    private static final int LIST_MAX_PAGES = 40;
+
+    // detailInfo2 객실 시설 플래그 -> 화면 표기. 순서가 곧 노출 순서라 LinkedHashMap을 쓴다.
+    private static final Map<String, String> ROOM_FACILITY_LABELS = new LinkedHashMap<>();
+
+    static {
+        ROOM_FACILITY_LABELS.put("roomaircondition", "에어컨");
+        ROOM_FACILITY_LABELS.put("roomtv", "TV");
+        ROOM_FACILITY_LABELS.put("roompc", "PC");
+        ROOM_FACILITY_LABELS.put("roomsofa", "쇼파");
+        ROOM_FACILITY_LABELS.put("roomcable", "케이블설치");
+        ROOM_FACILITY_LABELS.put("roominternet", "인터넷");
+        ROOM_FACILITY_LABELS.put("roomrefrigerator", "냉장고");
+        ROOM_FACILITY_LABELS.put("roomtable", "테이블");
+        ROOM_FACILITY_LABELS.put("roomhairdryer", "드라이기");
+        ROOM_FACILITY_LABELS.put("roombathfacility", "목욕시설");
+        ROOM_FACILITY_LABELS.put("roomtoiletries", "세면도구");
+        ROOM_FACILITY_LABELS.put("roomcook", "취사용품");
+    }
 
     private final RestClient restClient;
     private final TourApiProperties properties;
@@ -33,6 +58,29 @@ public class TourApiClient {
     public List<TourApiPlace> searchPlaces(Region region, PlaceCategory category, int numOfRows) {
         String rawResponseBody = requestAreaBasedList(region, TourApiCategoryCode.resolve(category), numOfRows);
         return parseItems(rawResponseBody, this::toPlace);
+    }
+
+    // 숙소 추천 후보 풀. arrange=A(제목순)로 앞에서 N개만 가져오면 이름이 'ㄱ'으로 시작하는 곳만
+    // 후보가 되므로, 해당 지역의 목록을 끝까지 훑어서 모은다.
+    // arrange 값으로는 대표 이미지를 거를 수 없어(totalCount가 동일) 여기서 직접 제외한다.
+    public List<TourApiPlace> searchAllPlacesWithImage(Region region, PlaceCategory category) {
+        List<TourApiPlace> collected = new ArrayList<>();
+
+        for (int pageNo = 1; pageNo <= LIST_MAX_PAGES; pageNo++) {
+            String rawResponseBody = requestAreaBasedList(
+                    region, TourApiCategoryCode.resolve(category), LIST_PAGE_SIZE, pageNo);
+            List<TourApiPlace> page = parseItems(rawResponseBody, this::toPlace);
+
+            page.stream()
+                    .filter(place -> place.thumbnailUrl() != null && !place.thumbnailUrl().isBlank())
+                    .forEach(collected::add);
+
+            if (page.size() < LIST_PAGE_SIZE) {
+                break;
+            }
+        }
+
+        return collected;
     }
 
     public Set<PlaceCategory> syncablePlaceCategories() {
@@ -293,6 +341,10 @@ public class TourApiClient {
     // areaBasedList2 - region이 null이면 areaCode를 아예 안 붙인다. TourAPI에서 실제로 확인한 결과
     // areaCode는 선택 파라미터라, 생략하면 지역 무관 전국 검색이 된다(희망 지역 미선택 시 사용).
     private String requestAreaBasedList(Region region, String contentTypeId, int numOfRows) {
+        return requestAreaBasedList(region, contentTypeId, numOfRows, 1);
+    }
+
+    private String requestAreaBasedList(Region region, String contentTypeId, int numOfRows, int pageNo) {
         try {
             return restClient.get()
                     .uri(uriBuilder -> {
@@ -307,7 +359,7 @@ public class TourApiClient {
                                 .queryParam("arrange", "A")
                                 .queryParam("contentTypeId", contentTypeId)
                                 .queryParam("numOfRows", numOfRows)
-                                .queryParam("pageNo", 1);
+                                .queryParam("pageNo", pageNo);
                         if (region != null) {
                             uriBuilder.queryParam("areaCode", TourApiRegionCode.resolve(region));
                         }
@@ -410,6 +462,75 @@ public class TourApiClient {
         } catch (JacksonException e) {
             throw new CustomException(ErrorCode.TOUR_API_REQUEST_FAILED);
         }
+    }
+
+    // detailInfo2 - 숙소(contentTypeId=32) 객실 목록. 등록이 안 된 숙소는 빈 목록을 반환한다.
+    public List<TourApiRoom> fetchRooms(String contentId) {
+        try {
+            String rawResponseBody = restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("https")
+                            .host("apis.data.go.kr")
+                            .path("/B551011/KorService2/detailInfo2")
+                            .queryParam("serviceKey", properties.serviceKey())
+                            .queryParam("MobileOS", "ETC")
+                            .queryParam("MobileApp", "moodchon")
+                            .queryParam("_type", "json")
+                            .queryParam("contentId", contentId)
+                            .queryParam("contentTypeId", detailContentTypeId(PlaceCategory.ACCOMMODATION))
+                            .queryParam("numOfRows", ROOM_MAX_COUNT)
+                            .queryParam("pageNo", 1)
+                            .build())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .body(String.class);
+
+            return parseItems(rawResponseBody, this::toRoom);
+        } catch (RestClientException | JacksonException e) {
+            throw new CustomException(ErrorCode.TOUR_API_REQUEST_FAILED);
+        }
+    }
+
+    private TourApiRoom toRoom(JsonNode item) {
+        return new TourApiRoom(
+                blankToNull(item.path("roomtitle").asString("")),
+                parseIntOrNull(item.path("roomcount").asString("")),
+                parseIntOrNull(item.path("roombasecount").asString("")),
+                parseIntOrNull(item.path("roommaxcount").asString("")),
+                parseIntOrNull(item.path("roomoffseasonminfee1").asString("")),
+                parseIntOrNull(item.path("roomoffseasonminfee2").asString("")),
+                parseIntOrNull(item.path("roompeakseasonminfee1").asString("")),
+                parseIntOrNull(item.path("roompeakseasonminfee2").asString("")),
+                blankToNull(item.path("roomimg1").asString("")),
+                roomFacilities(item)
+        );
+    }
+
+    // 객실 시설은 'Y'/'N' 플래그로 내려온다. 화면에 칩으로 나열할 이름만 뽑는다.
+    private List<String> roomFacilities(JsonNode item) {
+        List<String> facilities = new ArrayList<>();
+        ROOM_FACILITY_LABELS.forEach((field, label) -> {
+            if ("Y".equalsIgnoreCase(item.path(field).asString(""))) {
+                facilities.add(label);
+            }
+        });
+        return facilities;
+    }
+
+    private Integer parseIntOrNull(String rawValue) {
+        String value = blankToNull(rawValue);
+        if (value == null) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(value.replaceAll("[^0-9]", ""));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private String blankToNull(String rawValue) {
+        return (rawValue == null || rawValue.isBlank()) ? null : rawValue.trim();
     }
 
     private JsonNode firstItem(JsonNode itemNode) {

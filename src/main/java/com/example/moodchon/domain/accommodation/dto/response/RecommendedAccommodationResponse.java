@@ -31,8 +31,7 @@ public record RecommendedAccommodationResponse(
         String checkOutTime,
         String contact,
         String reservationUrl,
-        // TourAPI에 객실별 가격/정원이 없어 "양실 1실" 같은 요약 문자열만 제공한다.
-        String roomSummary,
+        List<RecommendedAccommodationRoomResponse> rooms,
         long voteCount,
         boolean votedByMe,
         List<AccommodationVoterResponse> voters
@@ -66,7 +65,9 @@ public record RecommendedAccommodationResponse(
                 recommendedAccommodation.getCheckOutTime(),
                 recommendedAccommodation.getContact(),
                 recommendedAccommodation.getReservationUrl(),
-                recommendedAccommodation.getRoomSummary(),
+                recommendedAccommodation.getRooms().stream()
+                        .map(RecommendedAccommodationRoomResponse::from)
+                        .toList(),
                 voteCount,
                 votedByMe,
                 voters

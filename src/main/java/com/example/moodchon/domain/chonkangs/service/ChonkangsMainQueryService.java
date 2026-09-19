@@ -16,6 +16,7 @@ import com.example.moodchon.domain.chonkangs.entity.ChonkangsMember;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMemberRepository;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsMoodSelectionRepository;
 import com.example.moodchon.domain.chonkangs.repository.ChonkangsRepository;
+import com.example.moodchon.domain.place.entity.Place;
 import com.example.moodchon.domain.place.entity.Post;
 import com.example.moodchon.domain.place.repository.PostRepository;
 import com.example.moodchon.domain.recommendation.dto.response.RecommendedItineraryResponse;
@@ -134,8 +135,13 @@ public class ChonkangsMainQueryService {
     }
 
     private ChonkangMainResponse buildAccommodationConfirmed(Chonkangs chonkang) {
+        Place place = chonkang.getConfirmedAccommodation();
+        // 추천을 거쳐 확정된 숙소면 AI가 만든 태그·좋은 점을 카드에 함께 보여준다.
+        RecommendedAccommodation recommended = recommendedAccommodationRepository
+                .findFirstByChonkangIdAndPlaceIdOrderByIdDesc(chonkang.getId(), place.getId())
+                .orElse(null);
         ConfirmedAccommodationResponse confirmedAccommodation =
-                ConfirmedAccommodationResponse.of(chonkang.getConfirmedAccommodation());
+                ConfirmedAccommodationResponse.of(place, recommended);
 
         RecommendedItineraryResponse itinerary = recommendedItineraryRepository.findByChonkangId(chonkang.getId())
                 .filter(RecommendedItinerary::isCommitted)

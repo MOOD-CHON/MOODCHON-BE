@@ -7,6 +7,7 @@ import com.example.moodchon.auth.TestLoginService;
 import com.example.moodchon.auth.TokenRefreshService;
 import com.example.moodchon.auth.dto.AppleLoginRequest;
 import com.example.moodchon.auth.dto.KakaoLoginRequest;
+import com.example.moodchon.auth.dto.KakaoWebLoginRequest;
 import com.example.moodchon.auth.dto.LogoutRequest;
 import com.example.moodchon.auth.dto.TestLoginRequest;
 import com.example.moodchon.auth.dto.TokenRefreshRequest;
@@ -33,6 +34,13 @@ public class AuthController {
     @PostMapping("/kakao")
     public ApiResponse<TokenResponse> loginWithKakao(@Valid @RequestBody KakaoLoginRequest request) {
         return ApiResponse.success(kakaoAuthService.login(request.accessToken()));
+    }
+
+    // 웹은 카카오 SDK가 브라우저에서 토큰 발급을 막아놔 인가 코드만 넘어온다.
+    @PostMapping("/kakao/web")
+    public ApiResponse<TokenResponse> loginWithKakaoOnWeb(@Valid @RequestBody KakaoWebLoginRequest request) {
+        return ApiResponse.success(
+                kakaoAuthService.loginWithAuthorizationCode(request.code(), request.redirectUri()));
     }
 
     @PostMapping("/apple")

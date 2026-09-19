@@ -20,7 +20,13 @@ public class KakaoAuthService {
 
     private final UserProvisioningService userProvisioningService;
     private final TokenIssuer tokenIssuer;
+    private final KakaoTokenExchanger kakaoTokenExchanger;
     private final RestClient restClient = RestClient.create();
+
+    // 웹은 인가 코드만 받아오므로 서버에서 액세스 토큰으로 바꾼 뒤 기존 로그인 흐름을 그대로 탄다.
+    public TokenResponse loginWithAuthorizationCode(String code, String redirectUri) {
+        return login(kakaoTokenExchanger.exchangeForAccessToken(code, redirectUri));
+    }
 
     public TokenResponse login(String accessToken) {
         Map<String, Object> attributes = fetchKakaoUser(accessToken);

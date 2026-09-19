@@ -51,17 +51,19 @@ public class ChonkangsAccommodationQueryService {
         Optional<RecommendedAccommodation> recommended = recommendedAccommodationRepository
                 .findFirstByChonkangIdAndPlaceIdOrderByIdDesc(chonkangId, place.getId());
 
-        Integer matchScore = recommended.map(RecommendedAccommodation::getMatchScore).orElse(null);
-        Integer rank = recommended.map(RecommendedAccommodation::getRank).orElse(null);
         long voteCount = recommended
                 .map(r -> accommodationVoteRepository.countByRecommendedAccommodationId(r.getId()))
                 .orElse(0L);
+        boolean votedByMe = recommended
+                .map(r -> accommodationVoteRepository.existsByRecommendedAccommodationIdAndUserId(r.getId(), userId))
+                .orElse(false);
         List<AccommodationVoterResponse> voters = recommended
                 .map(r -> accommodationVoteRepository.findAllWithUserByRecommendedAccommodationId(r.getId()).stream()
                         .map(AccommodationVoterResponse::from)
                         .toList())
                 .orElse(List.of());
 
-        return ConfirmedAccommodationDetailResponse.of(place, images, tags, matchScore, rank, voteCount, voters);
+        return ConfirmedAccommodationDetailResponse.of(
+                place, images, tags, recommended.orElse(null), voteCount, votedByMe, voters);
     }
 }
