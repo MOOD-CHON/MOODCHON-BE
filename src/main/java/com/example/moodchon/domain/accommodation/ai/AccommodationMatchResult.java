@@ -6,6 +6,7 @@ public record AccommodationMatchResult(
         List<MatchedAccommodation> accommodations
 ) {
 
-    public record MatchedAccommodation(long placeId, int matchScore, List<String> tags, List<String> highlights) {
+    public record MatchedAccommodation(long placeId, int matchScore, List<String> tags, List<String> highlights,
+                                        List<String> regrets) {
     }
 }

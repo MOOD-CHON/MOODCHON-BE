@@ -212,7 +212,16 @@ public class TourApiClient {
                 item.path("chkcooking").asString(""),
                 item.path("barbecue").asString(""),
                 item.path("accomcountlodging").asString(""),
-                petAccompanyType
+                petAccompanyType,
+                item.path("bicycle").asString(""),
+                item.path("campfire").asString(""),
+                item.path("parkinglodging").asString(""),
+                item.path("sauna").asString(""),
+                item.path("sports").asString(""),
+                item.path("reservationurl").asString(""),
+                item.path("infocenterlodging").asString(""),
+                item.path("roomcount").asString(""),
+                item.path("roomtype").asString("")
         );
     }
 

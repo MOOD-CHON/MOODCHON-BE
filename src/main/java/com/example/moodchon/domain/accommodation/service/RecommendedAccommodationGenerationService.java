@@ -109,9 +109,20 @@ public class RecommendedAccommodationGenerationService {
                     .rank(rank++)
                     .tags(matched.tags())
                     .highlights(matched.highlights())
+                    .regrets(matched.regrets())
                     .barbecueAvailable(parseFlag(intro.barbecue()))
                     .cookingAvailable(parseAvailability(intro.chkCooking()))
                     .petFriendly(parsePetFriendly(intro.petAccompanyType()))
+                    .bicycleAvailable(parseFlag(intro.bicycle()))
+                    .campfireAvailable(parseFlag(intro.campfire()))
+                    .parkingAvailable(parseAvailability(intro.parkingLodging()))
+                    .saunaAvailable(parseFlag(intro.sauna()))
+                    .sportsAvailable(parseFlag(intro.sports()))
+                    .checkInTime(blankToNull(intro.checkInTime()))
+                    .checkOutTime(blankToNull(intro.checkOutTime()))
+                    .contact(blankToNull(intro.infoCenterLodging()))
+                    .reservationUrl(blankToNull(intro.reservationUrl()))
+                    .roomSummary(buildRoomSummary(intro.roomType(), intro.roomCount()))
                     .build());
         }
 
@@ -151,5 +162,35 @@ public class RecommendedAccommodationGenerationService {
     // 없으면 "명시적으로 불가능"이 아니라 "정보없음"으로 다룬다.
     private Boolean parsePetFriendly(String petAccompanyType) {
         return (petAccompanyType == null || petAccompanyType.isBlank()) ? null : true;
+    }
+
+    // TourAPI는 안 채워진 필드를 빈 문자열로 내려준다. 화면에서 "정보없음"으로 다루도록 null로 바꾼다.
+    private String blankToNull(String rawValue) {
+        return (rawValue == null || rawValue.isBlank()) ? null : rawValue.trim();
+    }
+
+    // 객실 정보는 "양실 5실"처럼 유형+개수 요약으로만 보여준다. 둘 중 하나만 있으면 있는 것만 쓴다.
+    private String buildRoomSummary(String roomType, String roomCount) {
+        String type = blankToNull(roomType);
+        String count = withRoomUnit(blankToNull(roomCount));
+
+        if (type == null && count == null) {
+            return null;
+        }
+        if (type == null) {
+            return count;
+        }
+        if (count == null) {
+            return type;
+        }
+        return type + " " + count;
+    }
+
+    // roomcount는 "5"로 오기도 하고 "5실"처럼 단위까지 붙어서 오기도 한다. 중복으로 붙이지 않는다.
+    private String withRoomUnit(String roomCount) {
+        if (roomCount == null) {
+            return null;
+        }
+        return roomCount.endsWith("실") ? roomCount : roomCount + "실";
     }
 }

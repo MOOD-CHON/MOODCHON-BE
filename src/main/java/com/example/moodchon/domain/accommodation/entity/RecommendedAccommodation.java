@@ -60,24 +60,60 @@ public class RecommendedAccommodation extends BaseEntity {
     @Column(name = "highlight", columnDefinition = "TEXT", nullable = false)
     private List<String> highlights = new ArrayList<>();
 
+    // AI가 만든 "아쉬운 점". highlights(좋은 점)와 대칭되는 목록.
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "recommended_accommodation_regrets",
+            joinColumns = @JoinColumn(name = "recommended_accommodation_id"))
+    @OrderColumn(name = "regret_order")
+    @Column(name = "regret", columnDefinition = "TEXT", nullable = false)
+    private List<String> regrets = new ArrayList<>();
+
     // TourAPI 원본 값을 매칭 시점에 그대로 저장한 편의시설 정보. null은 "정보없음"을 뜻하고
     // 감점 근거로 쓰지 않는 것과 동일하게, 화면에서도 뱃지를 표시하지 않는 상태로 다뤄야 한다.
     private Boolean barbecueAvailable;
     private Boolean cookingAvailable;
     private Boolean petFriendly;
+    private Boolean bicycleAvailable;
+    private Boolean campfireAvailable;
+    private Boolean parkingAvailable;
+    private Boolean saunaAvailable;
+    private Boolean sportsAvailable;
+
+    private String checkInTime;
+    private String checkOutTime;
+    private String contact;
+    private String reservationUrl;
+
+    // TourAPI에는 객실별 가격/정원 데이터가 없어 "양실 1실"처럼 요약 텍스트로만 저장한다.
+    private String roomSummary;
 
     @Builder
     private RecommendedAccommodation(Chonkangs chonkang, Place place, int matchScore, int rank,
-                                      List<String> tags, List<String> highlights,
-                                      Boolean barbecueAvailable, Boolean cookingAvailable, Boolean petFriendly) {
+                                      List<String> tags, List<String> highlights, List<String> regrets,
+                                      Boolean barbecueAvailable, Boolean cookingAvailable, Boolean petFriendly,
+                                      Boolean bicycleAvailable, Boolean campfireAvailable, Boolean parkingAvailable,
+                                      Boolean saunaAvailable, Boolean sportsAvailable,
+                                      String checkInTime, String checkOutTime, String contact,
+                                      String reservationUrl, String roomSummary) {
         this.chonkang = chonkang;
         this.place = place;
         this.matchScore = matchScore;
         this.rank = rank;
         this.tags = tags != null ? tags : new ArrayList<>();
         this.highlights = highlights != null ? highlights : new ArrayList<>();
+        this.regrets = regrets != null ? regrets : new ArrayList<>();
         this.barbecueAvailable = barbecueAvailable;
         this.cookingAvailable = cookingAvailable;
         this.petFriendly = petFriendly;
+        this.bicycleAvailable = bicycleAvailable;
+        this.campfireAvailable = campfireAvailable;
+        this.parkingAvailable = parkingAvailable;
+        this.saunaAvailable = saunaAvailable;
+        this.sportsAvailable = sportsAvailable;
+        this.checkInTime = checkInTime;
+        this.checkOutTime = checkOutTime;
+        this.contact = contact;
+        this.reservationUrl = reservationUrl;
+        this.roomSummary = roomSummary;
     }
 }

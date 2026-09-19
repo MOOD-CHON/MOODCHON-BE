@@ -20,9 +20,10 @@ final class AccommodationMatchSchema {
                         "placeId", Map.of("type", "integer"),
                         "matchScore", Map.of("type", "integer"),
                         "tags", stringArraySchema,
-                        "highlights", stringArraySchema
+                        "highlights", stringArraySchema,
+                        "regrets", stringArraySchema
                 ),
-                "required", List.of("placeId", "matchScore", "tags", "highlights"),
+                "required", List.of("placeId", "matchScore", "tags", "highlights", "regrets"),
                 "additionalProperties", false
         );
 
